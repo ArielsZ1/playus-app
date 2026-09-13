@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-base text-ink font-body;
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(78, 127, 232, 0.10), transparent 40%),
+      radial-gradient(circle at 85% 0%, rgba(232, 181, 77, 0.08), transparent 35%);
+    background-attachment: fixed;
+  }
+}
+
+@layer components {
+  /* Panel con esquinas facetadas, como un corte de gema */
+  .gem-panel {
+    clip-path: polygon(0 14px, 14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
+    @apply bg-panel border border-line;
+  }
+
+  .gem-panel-sm {
+    clip-path: polygon(0 8px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+  }
+
+  .stat-label {
+    @apply text-xs tracking-wide text-muted;
+  }
+}
