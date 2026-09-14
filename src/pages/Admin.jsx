@@ -3,6 +3,7 @@ import {
   getJuegos,
   createJuego,
   getJugadores,
+  createJugador,
   getFechas,
   createFecha,
   updateFecha,
@@ -23,6 +24,7 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
   const [juegos, setJuegos] = useState([])
   const [jugadores, setJugadores] = useState([])
   const [fechas, setFechas] = useState([])
+  const [nuevoJugadorApodo, setNuevoJugadorApodo] = useState('')
 
   const [nuevoJuego, setNuevoJuego] = useState({ nombre: '', descripcion: '' })
   const [mostrarNuevoJuego, setMostrarNuevoJuego] = useState(false)
@@ -218,6 +220,14 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
     setMensaje('Temporada creada. Seleccionala desde el menú de arriba.')
   }
 
+  async function handleCrearJugador(e) {
+    e.preventDefault()
+    const creado = await createJugador(nuevoJugadorApodo)
+    setJugadores((prev) => [...prev, creado].sort((a, b) => a.apodo.localeCompare(b.apodo)))
+    setNuevoJugadorApodo('')
+    setMensaje('Jugador agregado.')
+  }
+
   return (
     <div className="space-y-12">
       <h1 className="font-display text-2xl">Carga de datos</h1>
@@ -249,6 +259,31 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
           />
           <button className="sm:col-span-3 bg-gold text-base font-medium py-2 hover:brightness-110">
             Crear temporada
+          </button>
+        </form>
+      </section>
+
+      <section className="gem-panel p-6">
+        <h2 className="font-display text-lg mb-4">Jugadores</h2>
+
+        <div className="flex flex-wrap gap-2 mb-4">
+          {jugadores.map((j) => (
+            <span key={j.id} className="gem-panel-sm bg-panel2 px-3 py-1 text-sm">
+              {j.apodo}
+            </span>
+          ))}
+        </div>
+
+        <form onSubmit={handleCrearJugador} className="flex gap-3">
+          <input
+            required
+            placeholder="Apodo del nuevo jugador"
+            className={inputClass}
+            value={nuevoJugadorApodo}
+            onChange={(e) => setNuevoJugadorApodo(e.target.value)}
+          />
+          <button className="bg-gold text-base font-medium px-4 hover:brightness-110 whitespace-nowrap">
+            Agregar
           </button>
         </form>
       </section>
