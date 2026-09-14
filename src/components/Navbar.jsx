@@ -25,6 +25,9 @@ export default function Navbar({ temporadas, temporadaId, onChangeTemporada, ses
           <NavLink to="/historial" className={({ isActive }) => `${navItem} ${isActive ? navItemActive : navItemInactive}`}>
             Historial
           </NavLink>
+          <NavLink to="/premios" className={({ isActive }) => `${navItem} ${isActive ? navItemActive : navItemInactive}`}>
+            Premios
+          </NavLink>
           <NavLink to="/admin" className={({ isActive }) => `${navItem} ${isActive ? navItemActive : navItemInactive}`}>
             Cargar datos
           </NavLink>

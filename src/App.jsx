@@ -6,6 +6,8 @@ import FechaDetalle from './pages/FechaDetalle.jsx'
 import Admin from './pages/Admin.jsx'
 import Notas from './pages/Notas.jsx'
 import Historial from './pages/Historial.jsx'
+import PerfilJugador from './pages/PerfilJugador.jsx'
+import Premios from './pages/Premios.jsx'
 import Login from './pages/Login.jsx'
 import { getTemporadas } from './lib/queries.js'
 import { supabase } from './lib/supabaseClient.js'
@@ -18,11 +20,6 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState(null)
   const [session, setSession] = useState(null)
-
-  function handleTemporadaCreada(temporada) {
-    setTemporadas((prev) => [...prev, temporada])
-    setTemporadaId(temporada.id)
-  }
 
   useEffect(() => {
     getTemporadas()
@@ -63,37 +60,44 @@ export default function App() {
           </div>
         )}
 
-        <Routes>
-          <Route path="/" element={temporadaId ? <Dashboard temporadaId={temporadaId} /> : null} />
-          <Route path="/fecha/:fechaId" element={<FechaDetalle />} />
-          <Route
-            path="/admin"
-            element={
-              session ? (
-                <Admin
-                  temporadaId={temporadaId}
+        {temporadaId && (
+          <Routes>
+            <Route path="/" element={<Dashboard temporadaId={temporadaId} />} />
+            <Route path="/fecha/:fechaId" element={<FechaDetalle />} />
+            <Route
+              path="/admin"
+              element={
+                session ? (
+                  <Admin
+                    temporadaId={temporadaId}
+                    temporadas={temporadas}
+                    onTemporadaCreada={(nueva) => {
+                      setTemporadas((prev) => [...prev, nueva])
+                      setTemporadaId(nueva.id)
+                    }}
+                  />
+                ) : (
+                  <Login />
+                )
+              }
+            />
+            <Route path="/notas" element={<Notas temporadaId={temporadaId} />} />
+            <Route path="/jugador/:jugadorId" element={<PerfilJugador />} />
+            <Route path="/premios" element={<Premios temporadaId={temporadaId} />} />
+            <Route
+              path="/historial"
+              element={
+                <Historial
                   temporadas={temporadas}
-                  onTemporadaCreada={handleTemporadaCreada}
+                  onSeleccionar={(id) => {
+                    setTemporadaId(id)
+                    navigate('/')
+                  }}
                 />
-              ) : (
-                <Login />
-              )
-            }
-          />
-          <Route path="/notas" element={temporadaId ? <Notas temporadaId={temporadaId} /> : null} />
-          <Route
-            path="/historial"
-            element={
-              <Historial
-                temporadas={temporadas}
-                onSeleccionar={(id) => {
-                  setTemporadaId(id)
-                  navigate('/')
-                }}
-              />
-            }
-          />
-        </Routes>
+              }
+            />
+          </Routes>
+        )}
       </main>
     </div>
   )

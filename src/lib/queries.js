@@ -51,10 +51,12 @@ export async function createJuego({ nombre, descripcion }) {
 }
 
 // ---------- Fechas ----------
+// Trae también los ids de resultados cargados, para poder marcar en el admin
+// qué fechas todavía no tienen ningún resultado cargado ("pendientes").
 export async function getFechas(temporadaId) {
   const { data, error } = await supabase
     .from('fechas')
-    .select('*, juego:juegos(*)')
+    .select('*, juego:juegos(*), resultados(id)')
     .eq('temporada_id', temporadaId)
     .order('numero_fecha')
   if (error) throw error
@@ -110,8 +112,22 @@ export async function getFechaDetalle(fechaId) {
   return data
 }
 
+// Busca el último récord mundial cargado para un juego (en cualquier fecha,
+// de cualquier temporada), para poder auto-completarlo si el juego se repite.
+export async function getUltimoRecordMundial(juegoId) {
+  if (!juegoId) return null
+  const { data, error } = await supabase
+    .from('fechas')
+    .select('record_mundial, created_at')
+    .eq('juego_id', juegoId)
+    .not('record_mundial', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+  if (error) throw error
+  return data?.[0]?.record_mundial || null
+}
+
 // ---------- Resultados ----------
-// Crea o actualiza el resultado de un jugador en una fecha (fecha_id + jugador_id es único)
 export async function upsertResultado(resultado) {
   const { data, error } = await supabase
     .from('resultados')
@@ -138,7 +154,6 @@ export async function getRecordsPorJuego(juegoId) {
     .select('*')
     .eq('juego_id', juegoId)
   if (error) throw error
-  // Lo devolvemos como mapa { jugador_id: valor } para consultarlo fácil
   const mapa = {}
   data.forEach((r) => {
     mapa[r.jugador_id] = r.valor
@@ -147,7 +162,7 @@ export async function getRecordsPorJuego(juegoId) {
 }
 
 export async function upsertRecordHistorico({ jugador_id, juego_id, valor }) {
-  if (!valor) return null // no pisamos el récord histórico si no cargaron nada nuevo
+  if (!valor) return null
   const { data, error } = await supabase
     .from('records_jugador_juego')
     .upsert([{ jugador_id, juego_id, valor, actualizado_en: new Date().toISOString() }], {
@@ -160,7 +175,6 @@ export async function upsertRecordHistorico({ jugador_id, juego_id, valor }) {
 }
 
 // ---------- Ranking ----------
-// Suma las gemas de todos los resultados de una temporada, agrupado por jugador
 export async function getRanking(temporadaId) {
   const { data, error } = await supabase
     .from('resultados')
@@ -181,8 +195,6 @@ export async function getRanking(temporadaId) {
   return Object.values(totales).sort((a, b) => b.gemas - a.gemas)
 }
 
-// Evolución acumulada de gemas por fecha, para el gráfico del dashboard.
-// Devuelve un array de puntos: { numero_fecha, [apodoJugador1]: gemasAcumuladas, ... }
 export async function getEvolucionGemas(temporadaId) {
   const { data, error } = await supabase
     .from('resultados')
@@ -225,4 +237,56 @@ export async function getNotas(temporadaId) {
     .order('fecha(numero_fecha)')
   if (error) throw error
   return data
+}
+
+// ---------- Perfil de jugador ----------
+// Récords históricos (por juego) + historial de resultados en todas las temporadas.
+export async function getPerfilJugador(jugadorId) {
+  const [jugador, records, resultados] = await Promise.all([
+    supabase.from('jugadores').select('*').eq('id', jugadorId).single(),
+    supabase.from('records_jugador_juego').select('*, juego:juegos(*)').eq('jugador_id', jugadorId),
+    supabase
+      .from('resultados')
+      .select('*, fecha:fechas(numero_fecha, temporada_id, juego:juegos(nombre), temporada:temporadas(nombre))')
+      .eq('jugador_id', jugadorId),
+  ])
+
+  if (jugador.error) throw jugador.error
+  if (records.error) throw records.error
+  if (resultados.error) throw resultados.error
+
+  const totalGemas = resultados.data.reduce((acc, r) => acc + (Number(r.gemas) || 0), 0)
+
+  return {
+    jugador: jugador.data,
+    records: records.data,
+    resultados: resultados.data,
+    totalGemas,
+  }
+}
+
+// ---------- Premios ----------
+export async function getPremios(temporadaId) {
+  const { data, error } = await supabase
+    .from('premios')
+    .select('*, jugador:jugadores(apodo)')
+    .eq('temporada_id', temporadaId)
+    .order('created_at')
+  if (error) throw error
+  return data
+}
+
+export async function createPremio({ temporada_id, jugador_id, nombre, descripcion }) {
+  const { data, error } = await supabase
+    .from('premios')
+    .insert([{ temporada_id, jugador_id: jugador_id || null, nombre, descripcion: descripcion || null }])
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deletePremio(id) {
+  const { error } = await supabase.from('premios').delete().eq('id', id)
+  if (error) throw error
 }

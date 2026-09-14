@@ -13,6 +13,10 @@ import {
   createTemporada,
   getRecordsPorJuego,
   upsertRecordHistorico,
+  getUltimoRecordMundial,
+  getPremios,
+  createPremio,
+  deletePremio,
 } from '../lib/queries.js'
 
 const inputClass =
@@ -33,17 +37,26 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
   const [editandoFechaId, setEditandoFechaId] = useState(null)
 
   const [fechaSeleccionada, setFechaSeleccionada] = useState('')
-  const [resultados, setResultados] = useState({}) // jugador_id -> campos
+  const [resultados, setResultados] = useState({})
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState(null)
 
   const [nuevaTemporada, setNuevaTemporada] = useState({ nombre: '', fecha_inicio: '', fecha_fin: '' })
 
+  const [premios, setPremios] = useState([])
+  const [nuevoPremio, setNuevoPremio] = useState({ nombre: '', descripcion: '', jugador_id: '' })
+
   async function cargarBase() {
-    const [j, jg, f] = await Promise.all([getJuegos(), getJugadores(), temporadaId ? getFechas(temporadaId) : Promise.resolve([])])
+    const [j, jg, f, p] = await Promise.all([
+      getJuegos(),
+      getJugadores(),
+      temporadaId ? getFechas(temporadaId) : Promise.resolve([]),
+      temporadaId ? getPremios(temporadaId) : Promise.resolve([]),
+    ])
     setJuegos(j)
     setJugadores(jg)
     setFechas(f)
+    setPremios(p)
   }
 
   useEffect(() => {
@@ -51,9 +64,6 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
   }, [temporadaId])
 
   useEffect(() => {
-    // Cuando cambia la fecha elegida para cargar resultados, traemos:
-    // - los resultados que ya existan (para poder editarlos)
-    // - el récord histórico de cada jugador en el juego de esa fecha
     async function inicializar() {
       const base = {}
       jugadores.forEach((j) => {
@@ -75,7 +85,6 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
           if (historicos[jugadorId]) base[jugadorId].record_historico = historicos[jugadorId]
         })
 
-        // Prellenar con resultados ya cargados, si existen
         const existentes = fechaObj.resultados
         if (existentes) {
           existentes.forEach((r) => {
@@ -97,6 +106,17 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
     }
     if (fechaSeleccionada) inicializar()
   }, [fechaSeleccionada, jugadores, fechas])
+
+  useEffect(() => {
+    // Si el juego elegido ya tuvo un récord mundial cargado en otra fecha,
+    // lo traemos solo (no pisa lo que ya hayas escrito a mano).
+    async function autocompletarRecordMundial() {
+      if (!nuevaFecha.juego_id || nuevaFecha.record_mundial) return
+      const ultimo = await getUltimoRecordMundial(nuevaFecha.juego_id)
+      if (ultimo) setNuevaFecha((prev) => ({ ...prev, record_mundial: ultimo }))
+    }
+    autocompletarRecordMundial()
+  }, [nuevaFecha.juego_id])
 
   async function handleCrearJuego(e) {
     e.preventDefault()
@@ -228,13 +248,27 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
     setMensaje('Jugador agregado.')
   }
 
+  async function handleCrearPremio(e) {
+    e.preventDefault()
+    const creado = await createPremio({ temporada_id: temporadaId, ...nuevoPremio })
+    const jugador = jugadores.find((j) => j.id === creado.jugador_id)
+    setPremios((prev) => [...prev, { ...creado, jugador: jugador ? { apodo: jugador.apodo } : null }])
+    setNuevoPremio({ nombre: '', descripcion: '', jugador_id: '' })
+    setMensaje('Premio agregado.')
+  }
+
+  async function handleBorrarPremio(id) {
+    if (!confirm('¿Borrar este premio?')) return
+    await deletePremio(id)
+    setPremios((prev) => prev.filter((p) => p.id !== id))
+  }
+
   return (
     <div className="space-y-12">
       <h1 className="font-display text-2xl">Carga de datos</h1>
 
       {mensaje && <div className="gem-panel-sm bg-emerald/10 border border-emerald text-emerald px-4 py-3 text-sm">{mensaje}</div>}
 
-      {/* Nueva temporada */}
       <section className="gem-panel p-6">
         <h2 className="font-display text-lg mb-4">Nueva temporada</h2>
         <form onSubmit={handleCrearTemporada} className="grid sm:grid-cols-3 gap-3">
@@ -288,7 +322,6 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
         </form>
       </section>
 
-      {/* Nueva fecha / edición */}
       <section className="gem-panel p-6">
         <h2 className="font-display text-lg mb-4">
           {editandoFechaId ? 'Editar fecha' : 'Nueva fecha'} — {temporadas.find((t) => t.id === temporadaId)?.nombre}
@@ -391,6 +424,9 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
               <div key={f.id} className="flex items-center justify-between gem-panel-sm bg-panel2 px-4 py-2 text-sm">
                 <span>
                   Fecha {f.numero_fecha} — {f.juego?.nombre}
+                  {(!f.resultados || f.resultados.length === 0) && (
+                    <span className="ml-2 text-xs text-gold border border-gold px-1.5 py-0.5">pendiente</span>
+                  )}
                 </span>
                 <span className="flex gap-3">
                   <button onClick={() => handleEditarFecha(f)} className="text-sapphire hover:brightness-125">
@@ -406,7 +442,6 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
         )}
       </section>
 
-      {/* Cargar resultados de una fecha existente */}
       <section className="gem-panel p-6">
         <h2 className="font-display text-lg mb-4">Cargar resultados por jugador</h2>
 
@@ -490,6 +525,58 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
             </button>
           </div>
         )}
+      </section>
+
+      <section className="gem-panel p-6">
+        <h2 className="font-display text-lg mb-4">Premios de la temporada</h2>
+
+        {premios.length > 0 && (
+          <div className="space-y-2 mb-6">
+            {premios.map((p) => (
+              <div key={p.id} className="flex items-center justify-between gem-panel-sm bg-panel2 px-4 py-2 text-sm">
+                <span>
+                  <span className="text-gold font-medium">{p.nombre}</span>
+                  {p.jugador && <span className="text-muted"> — {p.jugador.apodo}</span>}
+                  {p.descripcion && <span className="text-muted"> · {p.descripcion}</span>}
+                </span>
+                <button onClick={() => handleBorrarPremio(p.id)} className="text-ruby hover:brightness-125 text-xs">
+                  Borrar
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <form onSubmit={handleCrearPremio} className="grid sm:grid-cols-3 gap-3">
+          <input
+            required
+            placeholder="Nombre del premio (ej. Campeón)"
+            className={inputClass}
+            value={nuevoPremio.nombre}
+            onChange={(e) => setNuevoPremio({ ...nuevoPremio, nombre: e.target.value })}
+          />
+          <select
+            className={inputClass}
+            value={nuevoPremio.jugador_id}
+            onChange={(e) => setNuevoPremio({ ...nuevoPremio, jugador_id: e.target.value })}
+          >
+            <option value="">General (sin jugador)</option>
+            {jugadores.map((j) => (
+              <option key={j.id} value={j.id}>
+                {j.apodo}
+              </option>
+            ))}
+          </select>
+          <input
+            placeholder="Descripción (opcional)"
+            className={inputClass}
+            value={nuevoPremio.descripcion}
+            onChange={(e) => setNuevoPremio({ ...nuevoPremio, descripcion: e.target.value })}
+          />
+          <button className="sm:col-span-3 bg-gold text-base font-medium py-2 hover:brightness-110">
+            Agregar premio
+          </button>
+        </form>
       </section>
     </div>
   )

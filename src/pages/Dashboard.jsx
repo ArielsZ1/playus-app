@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { toPng } from 'html-to-image'
 import { getRanking, getFechas, getEvolucionGemas } from '../lib/queries.js'
 import Podio from '../components/Podio.jsx'
 import EvolucionChart from '../components/EvolucionChart.jsx'
@@ -9,6 +10,8 @@ export default function Dashboard({ temporadaId }) {
   const [fechas, setFechas] = useState([])
   const [evolucion, setEvolucion] = useState([])
   const [loading, setLoading] = useState(true)
+  const [exportando, setExportando] = useState(false)
+  const capturaRef = useRef(null)
 
   useEffect(() => {
     setLoading(true)
@@ -21,6 +24,22 @@ export default function Dashboard({ temporadaId }) {
       .finally(() => setLoading(false))
   }, [temporadaId])
 
+  async function handleCompartir() {
+    if (!capturaRef.current) return
+    setExportando(true)
+    try {
+      const dataUrl = await toPng(capturaRef.current, { backgroundColor: '#14102A' })
+      const link = document.createElement('a')
+      link.download = 'ranking-playus.png'
+      link.href = dataUrl
+      link.click()
+    } catch (err) {
+      alert('No se pudo generar la imagen: ' + err.message)
+    } finally {
+      setExportando(false)
+    }
+  }
+
   if (loading) return <p className="text-muted">Cargando ranking…</p>
 
   const top3 = ranking.slice(0, 3)
@@ -28,7 +47,18 @@ export default function Dashboard({ temporadaId }) {
 
   return (
     <div>
-      <h1 className="font-display text-2xl mb-8">Tabla de posiciones</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="font-display text-2xl">Tabla de posiciones</h1>
+        {ranking.length > 0 && (
+          <button
+            onClick={handleCompartir}
+            disabled={exportando}
+            className="text-sm bg-panel2 border border-line px-3 py-2 hover:border-gold disabled:opacity-50"
+          >
+            {exportando ? 'Generando…' : 'Compartir como imagen'}
+          </button>
+        )}
+      </div>
 
       {ranking.length === 0 ? (
         <div className="gem-panel px-6 py-8 text-center text-muted">
@@ -36,27 +66,41 @@ export default function Dashboard({ temporadaId }) {
         </div>
       ) : (
         <>
-          <Podio top3={top3} />
+          <div ref={capturaRef} className="p-4">
+            <Podio top3={top3} />
 
-          <div className="gem-panel overflow-hidden mb-12">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-muted border-b border-line">
-                  <th className="px-5 py-3 font-medium">#</th>
-                  <th className="px-5 py-3 font-medium">Jugador</th>
-                  <th className="px-5 py-3 font-medium text-right">Gemas</th>
-                </tr>
-              </thead>
-              <tbody>
-                {resto.map((j, i) => (
-                  <tr key={j.jugador_id} className="border-b border-line last:border-0">
-                    <td className="px-5 py-3 text-muted">{i + 4}</td>
-                    <td className="px-5 py-3">{j.apodo}</td>
-                    <td className="px-5 py-3 text-right text-gold font-medium">{j.gemas}</td>
+            <div className="gem-panel overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-muted border-b border-line">
+                    <th className="px-5 py-3 font-medium">#</th>
+                    <th className="px-5 py-3 font-medium">Jugador</th>
+                    <th className="px-5 py-3 font-medium text-right">Gemas</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {resto.map((j, i) => (
+                    <tr key={j.jugador_id} className="border-b border-line last:border-0">
+                      <td className="px-5 py-3 text-muted">{i + 4}</td>
+                      <td className="px-5 py-3">{j.apodo}</td>
+                      <td className="px-5 py-3 text-right text-gold font-medium">{j.gemas}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 mt-4 mb-12">
+            {ranking.map((j) => (
+              <Link
+                key={j.jugador_id}
+                to={`/jugador/${j.jugador_id}`}
+                className="text-xs text-sapphire hover:text-gold"
+              >
+                Ver perfil de {j.apodo}
+              </Link>
+            ))}
           </div>
 
           <EvolucionChart datos={evolucion} jugadores={ranking.map((j) => j.apodo)} />

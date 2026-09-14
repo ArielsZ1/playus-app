@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { getFechaDetalle, getRecordsPorJuego } from '../lib/queries.js'
+import { getFechaDetalle, getRecordsPorJuego, getRanking } from '../lib/queries.js'
 
 export default function FechaDetalle() {
   const { fechaId } = useParams()
   const [fecha, setFecha] = useState(null)
   const [records, setRecords] = useState({})
+  const [posiciones, setPosiciones] = useState({})
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState(null)
 
@@ -13,10 +14,16 @@ export default function FechaDetalle() {
     getFechaDetalle(fechaId)
       .then(async (f) => {
         setFecha(f)
-        if (f.juego_id) {
-          const r = await getRecordsPorJuego(f.juego_id)
-          setRecords(r)
-        }
+        const [recordsData, rankingData] = await Promise.all([
+          f.juego_id ? getRecordsPorJuego(f.juego_id) : {},
+          getRanking(f.temporada_id),
+        ])
+        setRecords(recordsData)
+        const mapa = {}
+        rankingData.forEach((r, i) => {
+          mapa[r.jugador_id] = i + 1
+        })
+        setPosiciones(mapa)
       })
       .catch((err) => setErrorMsg(err.message))
       .finally(() => setLoading(false))
@@ -66,7 +73,12 @@ export default function FechaDetalle() {
             {fecha.resultados.map((r) => (
               <tr key={r.id} className="border-b border-line last:border-0">
                 <td className="px-5 py-3">
-                  {r.jugador?.apodo}
+                  <Link to={`/jugador/${r.jugador_id}`} className="hover:text-gold">
+                    {r.jugador?.apodo}
+                  </Link>
+                  {posiciones[r.jugador_id] && (
+                    <span className="text-muted"> ({posiciones[r.jugador_id]}° en la temporada)</span>
+                  )}
                   {r.sancionado && (
                     <span className="ml-2 text-xs text-ruby border border-ruby px-1.5 py-0.5">sancionado</span>
                   )}
