@@ -26,4 +26,8 @@
   .stat-label {
     @apply text-xs tracking-wide text-muted;
   }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-gold ring-offset-2 ring-offset-base;
+  }
 }

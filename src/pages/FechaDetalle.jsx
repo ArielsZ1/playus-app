@@ -58,7 +58,7 @@ export default function FechaDetalle() {
         )}
       </div>
 
-      <div className="gem-panel overflow-hidden">
+      <div className="gem-panel overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-muted border-b border-line">

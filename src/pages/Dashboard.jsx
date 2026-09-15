@@ -10,18 +10,28 @@ export default function Dashboard({ temporadaId }) {
   const [fechas, setFechas] = useState([])
   const [evolucion, setEvolucion] = useState([])
   const [loading, setLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState(null)
   const [exportando, setExportando] = useState(false)
   const capturaRef = useRef(null)
 
   useEffect(() => {
+    let activo = true
     setLoading(true)
+    setErrorMsg(null)
     Promise.all([getRanking(temporadaId), getFechas(temporadaId), getEvolucionGemas(temporadaId)])
       .then(([rankingData, fechasData, evolucionData]) => {
+        if (!activo) return
         setRanking(rankingData)
         setFechas(fechasData)
         setEvolucion(evolucionData)
       })
+      .catch((err) => {
+        if (activo) setErrorMsg(err.message)
+      })
       .finally(() => setLoading(false))
+    return () => {
+      activo = false
+    }
   }, [temporadaId])
 
   async function handleCompartir() {
@@ -41,6 +51,7 @@ export default function Dashboard({ temporadaId }) {
   }
 
   if (loading) return <p className="text-muted">Cargando ranking…</p>
+  if (errorMsg) return <p className="text-ruby" role="alert">No se pudo cargar el ranking: {errorMsg}</p>
 
   const top3 = ranking.slice(0, 3)
   const resto = ranking.slice(3)
@@ -53,6 +64,8 @@ export default function Dashboard({ temporadaId }) {
           <button
             onClick={handleCompartir}
             disabled={exportando}
+            type="button"
+            aria-label="Descargar el ranking como imagen"
             className="text-sm bg-panel2 border border-line px-3 py-2 hover:border-gold disabled:opacity-50"
           >
             {exportando ? 'Generando…' : 'Compartir como imagen'}
@@ -69,7 +82,7 @@ export default function Dashboard({ temporadaId }) {
           <div ref={capturaRef} className="p-4">
             <Podio top3={top3} />
 
-            <div className="gem-panel overflow-hidden">
+            <div className="gem-panel overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-muted border-b border-line">

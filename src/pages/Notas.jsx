@@ -4,15 +4,29 @@ import { getNotas } from '../lib/queries.js'
 export default function Notas({ temporadaId }) {
   const [notas, setNotas] = useState([])
   const [loading, setLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState(null)
 
   useEffect(() => {
+    let activo = true
     setLoading(true)
+    setErrorMsg(null)
     getNotas(temporadaId)
-      .then(setNotas)
-      .finally(() => setLoading(false))
+      .then((data) => {
+        if (activo) setNotas(data)
+      })
+      .catch((err) => {
+        if (activo) setErrorMsg(err.message)
+      })
+      .finally(() => {
+        if (activo) setLoading(false)
+      })
+    return () => {
+      activo = false
+    }
   }, [temporadaId])
 
   if (loading) return <p className="text-muted">Cargando notas…</p>
+  if (errorMsg) return <p className="text-ruby" role="alert">No se pudieron cargar las notas: {errorMsg}</p>
 
   return (
     <div>

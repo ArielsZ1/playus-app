@@ -8,11 +8,11 @@ import {
   createFecha,
   updateFecha,
   deleteFecha,
-  upsertResultado,
+  upsertResultados,
   deleteResultado,
   createTemporada,
   getRecordsPorJuego,
-  upsertRecordHistorico,
+  upsertRecordsHistoricos,
   getUltimoRecordMundial,
   getPremios,
   createPremio,
@@ -78,7 +78,7 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
         }
       })
 
-      const fechaObj = fechas.find((f) => f.id === fechaSeleccionada)
+      const fechaObj = fechas.find((f) => String(f.id) === String(fechaSeleccionada))
       if (fechaObj) {
         const historicos = await getRecordsPorJuego(fechaObj.juego_id)
         Object.keys(base).forEach((jugadorId) => {
@@ -130,12 +130,26 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
   async function handleGuardarFecha(e) {
     e.preventDefault()
     setMensaje(null)
+    const numeroFecha = Number(nuevaFecha.numero_fecha)
+    const bonus = nuevaFecha.bonus_porcentaje === '' ? null : Number(nuevaFecha.bonus_porcentaje)
+    if (!Number.isInteger(numeroFecha) || numeroFecha < 1) {
+      setMensaje('El número de fecha debe ser un entero positivo.')
+      return
+    }
+    if (bonus !== null && (!Number.isFinite(bonus) || bonus < 0)) {
+      setMensaje('El bonus debe ser un número mayor o igual a cero.')
+      return
+    }
+    if (!nuevaFecha.juego_id) {
+      setMensaje('Elegí un juego para la fecha.')
+      return
+    }
     const payload = {
       temporada_id: temporadaId,
-      numero_fecha: Number(nuevaFecha.numero_fecha),
+      numero_fecha: numeroFecha,
       fecha_calendario: nuevaFecha.fecha_calendario,
       juego_id: nuevaFecha.juego_id,
-      bonus_porcentaje: nuevaFecha.bonus_porcentaje ? Number(nuevaFecha.bonus_porcentaje) : null,
+      bonus_porcentaje: bonus,
       record_mundial: nuevaFecha.record_mundial,
     }
 
@@ -193,9 +207,7 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
     setGuardando(true)
     setMensaje(null)
     try {
-      for (const jugadorId of Object.keys(resultados)) {
-        const r = resultados[jugadorId]
-        await upsertResultado({
+      const resultadosParaGuardar = Object.entries(resultados).map(([jugadorId, r]) => ({
           fecha_id: fechaSeleccionada,
           jugador_id: jugadorId,
           performance: r.performance,
@@ -204,15 +216,16 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
           jugo: r.jugo,
           sancionado: r.sancionado,
           nota: r.nota || null,
-        })
-        if (fechaObj?.juego_id) {
-          await upsertRecordHistorico({
+        }))
+      const historicos = Object.entries(resultados)
+        .filter(([, r]) => r.record_historico !== '' && r.record_historico !== null && r.record_historico !== undefined)
+        .map(([jugadorId, r]) => ({
             jugador_id: jugadorId,
             juego_id: fechaObj.juego_id,
             valor: r.record_historico,
-          })
-        }
-      }
+          }))
+      await upsertResultados(resultadosParaGuardar)
+      if (fechaObj?.juego_id) await upsertRecordsHistoricos(historicos)
       setMensaje('Resultados guardados correctamente.')
     } catch (err) {
       setMensaje(`Error al guardar: ${err.message}`)

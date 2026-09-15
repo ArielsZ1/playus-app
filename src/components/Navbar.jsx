@@ -36,6 +36,7 @@ export default function Navbar({ temporadas, temporadaId, onChangeTemporada, ses
         <div className="flex items-center gap-3">
           {temporadas.length > 0 && (
             <select
+              aria-label="Seleccionar temporada"
               value={temporadaId || ''}
               onChange={(e) => onChangeTemporada(e.target.value)}
               className="bg-panel border border-line text-ink text-sm px-3 py-2 focus:outline-none focus:border-gold"
@@ -49,7 +50,7 @@ export default function Navbar({ temporadas, temporadaId, onChangeTemporada, ses
           )}
 
           {session && (
-            <button onClick={() => supabase.auth.signOut()} className="text-xs text-muted hover:text-ruby">
+            <button type="button" onClick={() => supabase.auth.signOut()} className="text-xs text-muted hover:text-ruby">
               Salir
             </button>
           )}

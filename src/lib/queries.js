@@ -138,6 +138,16 @@ export async function upsertResultado(resultado) {
   return data
 }
 
+export async function upsertResultados(resultados) {
+  if (resultados.length === 0) return []
+  const { data, error } = await supabase
+    .from('resultados')
+    .upsert(resultados, { onConflict: 'fecha_id,jugador_id' })
+    .select()
+  if (error) throw error
+  return data
+}
+
 export async function deleteResultado(fechaId, jugadorId) {
   const { error } = await supabase
     .from('resultados')
@@ -162,7 +172,7 @@ export async function getRecordsPorJuego(juegoId) {
 }
 
 export async function upsertRecordHistorico({ jugador_id, juego_id, valor }) {
-  if (!valor) return null
+  if (valor === '' || valor === null || valor === undefined) return null
   const { data, error } = await supabase
     .from('records_jugador_juego')
     .upsert([{ jugador_id, juego_id, valor, actualizado_en: new Date().toISOString() }], {
@@ -170,6 +180,20 @@ export async function upsertRecordHistorico({ jugador_id, juego_id, valor }) {
     })
     .select()
     .single()
+  if (error) throw error
+  return data
+}
+
+export async function upsertRecordsHistoricos(records) {
+  const validos = records.filter((record) => record.valor !== '' && record.valor !== null && record.valor !== undefined)
+  if (validos.length === 0) return []
+  const { data, error } = await supabase
+    .from('records_jugador_juego')
+    .upsert(
+      validos.map((record) => ({ ...record, actualizado_en: new Date().toISOString() })),
+      { onConflict: 'jugador_id,juego_id' },
+    )
+    .select()
   if (error) throw error
   return data
 }
@@ -192,7 +216,7 @@ export async function getRanking(temporadaId) {
     totales[id].gemas += Number(row.gemas) || 0
   }
 
-  return Object.values(totales).sort((a, b) => b.gemas - a.gemas)
+  return Object.values(totales).sort((a, b) => b.gemas - a.gemas || a.apodo.localeCompare(b.apodo))
 }
 
 export async function getEvolucionGemas(temporadaId) {

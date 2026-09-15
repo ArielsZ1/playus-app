@@ -28,6 +28,7 @@ export default function Login() {
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <input
+          aria-label="Email"
           type="email"
           required
           placeholder="Email"
@@ -36,6 +37,7 @@ export default function Login() {
           onChange={(e) => setEmail(e.target.value)}
         />
         <input
+          aria-label="Contraseña"
           type="password"
           required
           minLength={6}

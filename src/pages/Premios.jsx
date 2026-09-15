@@ -5,15 +5,29 @@ import { getPremios } from '../lib/queries.js'
 export default function Premios({ temporadaId }) {
   const [premios, setPremios] = useState([])
   const [loading, setLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState(null)
 
   useEffect(() => {
+    let activo = true
     setLoading(true)
+    setErrorMsg(null)
     getPremios(temporadaId)
-      .then(setPremios)
-      .finally(() => setLoading(false))
+      .then((data) => {
+        if (activo) setPremios(data)
+      })
+      .catch((err) => {
+        if (activo) setErrorMsg(err.message)
+      })
+      .finally(() => {
+        if (activo) setLoading(false)
+      })
+    return () => {
+      activo = false
+    }
   }, [temporadaId])
 
   if (loading) return <p className="text-muted">Cargando premios…</p>
+  if (errorMsg) return <p className="text-ruby" role="alert">No se pudieron cargar los premios: {errorMsg}</p>
 
   return (
     <div>

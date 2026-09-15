@@ -6,15 +6,29 @@ export default function PerfilJugador() {
   const { jugadorId } = useParams()
   const [perfil, setPerfil] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState(null)
 
   useEffect(() => {
+    let activo = true
     setLoading(true)
+    setErrorMsg(null)
     getPerfilJugador(jugadorId)
-      .then(setPerfil)
-      .finally(() => setLoading(false))
+      .then((data) => {
+        if (activo) setPerfil(data)
+      })
+      .catch((err) => {
+        if (activo) setErrorMsg(err.message)
+      })
+      .finally(() => {
+        if (activo) setLoading(false)
+      })
+    return () => {
+      activo = false
+    }
   }, [jugadorId])
 
   if (loading) return <p className="text-muted">Cargando perfil…</p>
+  if (errorMsg) return <p className="text-ruby" role="alert">No se pudo cargar el perfil: {errorMsg}</p>
   if (!perfil) return null
 
   const { jugador, records, resultados, totalGemas } = perfil
@@ -49,7 +63,7 @@ export default function PerfilJugador() {
       {historial.length === 0 ? (
         <p className="text-muted">Todavía no jugó ninguna fecha.</p>
       ) : (
-        <div className="gem-panel overflow-hidden">
+        <div className="gem-panel overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-muted border-b border-line">

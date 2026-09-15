@@ -1,17 +1,18 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
-import Dashboard from './pages/Dashboard.jsx'
-import FechaDetalle from './pages/FechaDetalle.jsx'
-import Admin from './pages/Admin.jsx'
-import Notas from './pages/Notas.jsx'
-import Historial from './pages/Historial.jsx'
-import PerfilJugador from './pages/PerfilJugador.jsx'
-import Premios from './pages/Premios.jsx'
-import Login from './pages/Login.jsx'
 import { getTemporadas } from './lib/queries.js'
 import { supabase } from './lib/supabaseClient.js'
 import { useNavigate } from 'react-router-dom'
+
+const Dashboard = lazy(() => import('./pages/Dashboard.jsx'))
+const FechaDetalle = lazy(() => import('./pages/FechaDetalle.jsx'))
+const Admin = lazy(() => import('./pages/Admin.jsx'))
+const Notas = lazy(() => import('./pages/Notas.jsx'))
+const Historial = lazy(() => import('./pages/Historial.jsx'))
+const PerfilJugador = lazy(() => import('./pages/PerfilJugador.jsx'))
+const Premios = lazy(() => import('./pages/Premios.jsx'))
+const Login = lazy(() => import('./pages/Login.jsx'))
 
 export default function App() {
   const navigate = useNavigate()
@@ -20,6 +21,12 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState(null)
   const [session, setSession] = useState(null)
+
+  const noTemporada = (
+    <div className="gem-panel px-6 py-8 text-center text-muted">
+      Todavía no hay ninguna temporada cargada. Creá una desde la sección Admin.
+    </div>
+  )
 
   useEffect(() => {
     getTemporadas()
@@ -54,49 +61,49 @@ export default function App() {
           </div>
         )}
 
-        {!loading && !errorMsg && !temporadaId && (
-          <div className="gem-panel px-6 py-8 text-center text-muted">
-            Todavía no hay ninguna temporada cargada. Creá una desde la sección Admin.
-          </div>
-        )}
-
-        {temporadaId && (
-          <Routes>
-            <Route path="/" element={<Dashboard temporadaId={temporadaId} />} />
-            <Route path="/fecha/:fechaId" element={<FechaDetalle />} />
-            <Route
-              path="/admin"
-              element={
-                session ? (
-                  <Admin
-                    temporadaId={temporadaId}
+        {!loading && !errorMsg && (
+          <Suspense fallback={<p className="text-muted">Cargando sección…</p>}>
+            <Routes>
+              <Route path="/" element={temporadaId ? <Dashboard temporadaId={temporadaId} /> : noTemporada} />
+              <Route path="/fecha/:fechaId" element={temporadaId ? <FechaDetalle /> : noTemporada} />
+              <Route
+                path="/admin"
+                element={
+                  session ? (
+                    <Admin
+                      temporadaId={temporadaId}
+                      temporadas={temporadas}
+                      onTemporadaCreada={(nueva) => {
+                        setTemporadas((prev) => [...prev, nueva])
+                        setTemporadaId(nueva.id)
+                      }}
+                    />
+                  ) : (
+                    <Login />
+                  )
+                }
+              />
+              <Route path="/notas" element={temporadaId ? <Notas temporadaId={temporadaId} /> : noTemporada} />
+              <Route path="/jugador/:jugadorId" element={temporadaId ? <PerfilJugador /> : noTemporada} />
+              <Route path="/premios" element={temporadaId ? <Premios temporadaId={temporadaId} /> : noTemporada} />
+              <Route
+                path="/historial"
+                element={
+                  <Historial
                     temporadas={temporadas}
-                    onTemporadaCreada={(nueva) => {
-                      setTemporadas((prev) => [...prev, nueva])
-                      setTemporadaId(nueva.id)
+                    onSeleccionar={(id) => {
+                      setTemporadaId(id)
+                      navigate('/')
                     }}
                   />
-                ) : (
-                  <Login />
-                )
-              }
-            />
-            <Route path="/notas" element={<Notas temporadaId={temporadaId} />} />
-            <Route path="/jugador/:jugadorId" element={<PerfilJugador />} />
-            <Route path="/premios" element={<Premios temporadaId={temporadaId} />} />
-            <Route
-              path="/historial"
-              element={
-                <Historial
-                  temporadas={temporadas}
-                  onSeleccionar={(id) => {
-                    setTemporadaId(id)
-                    navigate('/')
-                  }}
-                />
-              }
-            />
-          </Routes>
+                }
+              />
+              <Route
+                path="*"
+                element={<div className="gem-panel px-6 py-8 text-center text-muted">La página que buscás no existe.</div>}
+              />
+            </Routes>
+          </Suspense>
         )}
       </main>
     </div>
