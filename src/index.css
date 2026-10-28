@@ -47,3 +47,75 @@
     @apply outline-none ring-2 ring-gold ring-offset-2 ring-offset-base;
   }
 }
+
+/* ---------- Intro: telón + trofeo (src/components/Intro.jsx) ---------- */
+.telon {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50.5%;
+  background:
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.35), transparent 25%, transparent 75%, rgba(0, 0, 0, 0.45)),
+    repeating-linear-gradient(90deg, #2A1F57 0 18px, #1E1840 18px 30px, #33276A 30px 44px, #241B4B 44px 56px);
+  transition: transform 1.2s cubic-bezier(0.7, 0, 0.3, 1);
+}
+.telon-izq { left: 0; border-right: 2px solid #E8B54D; box-shadow: 6px 0 24px rgba(0, 0, 0, 0.5); }
+.telon-der { right: 0; border-left: 2px solid #E8B54D; box-shadow: -6px 0 24px rgba(0, 0, 0, 0.5); }
+.intro-abriendo .telon-izq { transform: translateX(-102%); }
+.intro-abriendo .telon-der { transform: translateX(102%); }
+
+.intro-contenido { transition: opacity 0.35s ease, transform 0.35s ease; }
+.intro-abriendo .intro-contenido { opacity: 0; transform: scale(1.04); pointer-events: none; }
+.intro-luz { background: radial-gradient(ellipse at 50% 42%, rgba(232, 181, 77, 0.16), rgba(20, 16, 42, 0.55) 45%, transparent 75%); }
+
+.intro-trazo { stroke-dasharray: 1; stroke-dashoffset: 1; fill-opacity: 0; animation: intro-dibujar 1.4s ease-out forwards; }
+.intro-gema { animation-delay: 0.7s; }
+.intro-relleno { animation: intro-dibujar 1.4s ease-out forwards, intro-rellenar 0.7s ease-out 1.3s forwards; }
+.intro-relleno.intro-gema { animation: intro-dibujar 1.2s ease-out 0.7s forwards, intro-rellenar 0.7s ease-out 1.5s forwards; }
+.intro-trofeo { animation: intro-brillo 3s ease-in-out 1.8s infinite; }
+
+.intro-destello {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #FFF4D6;
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+  opacity: 0;
+  animation: intro-destellar 2.4s ease-in-out 2.4s infinite;
+}
+
+.intro-reflejo { opacity: 0; animation: intro-rellenar-trazo 0.6s ease-out 1.8s forwards; }
+.intro-barrido { transform-box: fill-box; animation: intro-barrer 4s ease-in-out 2.2s infinite; }
+.intro-rotar { animation: intro-subir 0.5s ease-out; }
+
+.intro-aparecer { opacity: 0; animation: intro-subir 0.7s ease-out var(--retraso, 0s) forwards; }
+
+@keyframes intro-dibujar { to { stroke-dashoffset: 0; } }
+@keyframes intro-rellenar { to { fill-opacity: 1; } }
+@keyframes intro-brillo {
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(232, 181, 77, 0.35)); }
+  50% { filter: drop-shadow(0 0 28px rgba(232, 181, 77, 0.7)); }
+}
+@keyframes intro-destellar {
+  0%, 100% { opacity: 0; transform: scale(0.3) rotate(0deg); }
+  40% { opacity: 1; transform: scale(1) rotate(45deg); }
+  70% { opacity: 0; transform: scale(0.5) rotate(90deg); }
+}
+@keyframes intro-rellenar-trazo { to { opacity: 0.45; } }
+@keyframes intro-barrer {
+  0% { transform: skewX(-20deg) translateX(0); }
+  35%, 100% { transform: skewX(-20deg) translateX(190px); }
+}
+@keyframes intro-subir {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Sin movimiento: todo aparece de una y el telón se desvanece en vez de abrirse */
+@media (prefers-reduced-motion: reduce) {
+  .intro-trazo, .intro-relleno, .intro-relleno.intro-gema, .intro-aparecer, .intro-trofeo, .intro-destello, .intro-rotar, .intro-barrido { animation: none; opacity: 1; stroke-dashoffset: 0; fill-opacity: 1; }
+  .intro-destello { opacity: 0; }
+  .intro-reflejo { animation: none; opacity: 0.45; }
+  .telon { transition: opacity 0.3s ease; }
+  .intro-abriendo .telon-izq, .intro-abriendo .telon-der { transform: none; opacity: 0; }
+}

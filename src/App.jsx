@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
+import Intro, { introPendiente } from './components/Intro.jsx'
 import { getTemporadas } from './lib/queries.js'
 import { supabase } from './lib/supabaseClient.js'
 import { useNavigate } from 'react-router-dom'
@@ -16,6 +17,9 @@ const Login = lazy(() => import('./pages/Login.jsx'))
 
 export default function App() {
   const navigate = useNavigate()
+  const location = useLocation()
+  // Solo al llegar al inicio: un link directo a un perfil o fecha no pasa por el telón
+  const [mostrarIntro, setMostrarIntro] = useState(() => location.pathname === '/' && introPendiente())
   const [temporadas, setTemporadas] = useState([])
   const [temporadaId, setTemporadaId] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -46,6 +50,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
+      {mostrarIntro && (
+        <Intro
+          temporadas={temporadas}
+          temporadaId={temporadaId}
+          onTerminar={() => setMostrarIntro(false)}
+        />
+      )}
       <Navbar
         temporadas={temporadas}
         temporadaId={temporadaId}
