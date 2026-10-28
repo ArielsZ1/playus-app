@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { toBlob } from 'html-to-image'
 import { useParams, Link } from 'react-router-dom'
 import { getPerfilJugador, getFechasTodas, getJugadores } from '../lib/queries.js'
 import { analizarJugador } from '../lib/perfil.js'
@@ -136,8 +137,31 @@ function Palmares({ palmares, especiales }) {
   )
 }
 
+// En el celular abre el menú de compartir (WhatsApp, etc.); en la compu descarga el PNG
+async function compartirImagen(nodo, nombreArchivo) {
+  const blob = await toBlob(nodo, { backgroundColor: '#14102A', pixelRatio: 2, style: { padding: '20px' } })
+  const archivo = new File([blob], nombreArchivo, { type: 'image/png' })
+  if (navigator.canShare?.({ files: [archivo] })) {
+    try {
+      await navigator.share({ files: [archivo], title: 'Ficha Playus' })
+    } catch (err) {
+      if (err.name !== 'AbortError') throw err // cancelar el menú no es un error
+    }
+    return
+  }
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.download = nombreArchivo
+  link.href = url
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
 export default function PerfilJugador({ temporadas }) {
   const { jugadorId } = useParams()
+  const capturaRef = useRef(null)
+  const [exportando, setExportando] = useState(false)
+  const [errorCompartir, setErrorCompartir] = useState(null)
   const [perfil, setPerfil] = useState(null)
   const [analisis, setAnalisis] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -170,26 +194,61 @@ export default function PerfilJugador({ temporadas }) {
   if (!perfil || !analisis) return null
 
   const { jugador, records, premios } = perfil
+
+  async function handleCompartir() {
+    setExportando(true)
+    setErrorCompartir(null)
+    try {
+      await compartirImagen(capturaRef.current, `ficha-${jugador.apodo.replace(/\W+/g, '-').toLowerCase()}.png`)
+    } catch (err) {
+      setErrorCompartir(err.message)
+    } finally {
+      setExportando(false)
+    }
+  }
   const { ficha, historial, temporadasJugadas, palmares, juegos, gemas } = analisis
 
   return (
     <div className="flex flex-col gap-10">
-      <Link to="/" className="text-sm text-muted hover:text-gold">
-        ← Volver al ranking
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link to="/" className="text-sm text-muted hover:text-gold">
+          ← Volver al ranking
+        </Link>
+        {ficha && (
+          <button
+            onClick={handleCompartir}
+            disabled={exportando}
+            type="button"
+            className="flex items-center gap-2 min-h-[44px] text-sm bg-panel2 border border-line px-4 hover:border-gold disabled:opacity-50"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
+              <path d="M16 6l-4-4-4 4" />
+              <path d="M12 2v13" />
+            </svg>
+            {exportando ? 'Generando…' : 'Compartir ficha'}
+          </button>
+        )}
+      </div>
+      {errorCompartir && (
+        <p className="text-ruby text-sm -mt-6" role="alert">No se pudo generar la imagen: {errorCompartir}</p>
+      )}
 
       {ficha ? (
         <>
-          <Ficha apodo={jugador.apodo} ficha={ficha} />
+          <div ref={capturaRef} className="flex flex-col gap-3">
+            <Ficha apodo={jugador.apodo} ficha={ficha} />
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            <Dato etiqueta="Fechas">{ficha.n}</Dato>
-            <Dato etiqueta="Victorias">{ficha.victorias}</Dato>
-            <Dato etiqueta="Podios">{ficha.podios}</Dato>
-            <Dato etiqueta="Puesto prom.">{promedio(ficha.promedio)}°</Dato>
-            <Dato etiqueta="Gemas">
-              <span className="text-gold">{gemas}</span>
-            </Dato>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              <Dato etiqueta="Fechas">{ficha.n}</Dato>
+              <Dato etiqueta="Victorias">{ficha.victorias}</Dato>
+              <Dato etiqueta="Podios">{ficha.podios}</Dato>
+              <Dato etiqueta="Puesto prom.">{promedio(ficha.promedio)}°</Dato>
+              <Dato etiqueta="Gemas">
+                <span className="text-gold">{gemas}</span>
+              </Dato>
+            </div>
+            <p className="font-display text-xs tracking-[0.3em] text-muted text-right">PLAYUS</p>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-6">
