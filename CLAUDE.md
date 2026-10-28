@@ -26,7 +26,7 @@ Requires `.env` with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (see `.env
 - **Supabase tables:** `temporadas`, `fechas`, `juegos`, `jugadores`, `resultados` (keyed by fecha + jugador, upserted), `records_jugador_juego` (historical record per player+game), `premios`. The schema/RLS is not in this repo — it lives in the Supabase project. Public read, writes only for authenticated users (enforced by RLS).
 - **Global state lives in `App.jsx`:** the season list, the selected `temporadaId` (defaults to the last one), and the auth session. These are passed as props; there is no context or state library. Pages are lazy-loaded routes.
 - **`/admin` is the only write surface** (`src/pages/Admin.jsx`, the largest file): create seasons/fechas/games/players, bulk-upsert results, records, premios. It renders `Login` when there is no session. Login only signs in existing accounts (sign-up was removed).
-- **Records:** "récord mundial" is stored on the `fecha` (tied to that day's game); "récord histórico" is per player+game in `records_jugador_juego` and persists across fechas. Saving overwrites it without checking it is better (known gap, see README).
+- **Records:** "récord mundial" is stored on the `fecha` (tied to that day's game); "récord histórico" is per player+game in `records_jugador_juego` and persists across fechas. On save it keeps the best of stored / typed / that fecha's performance, using `juegos.menor_es_mejor` (true = lower wins, null = no validation); logic in `src/lib/records.js`.
 - **Evolution chart keys series by player `apodo`**, so renaming a player splits their line.
 
 ## Styling

@@ -38,6 +38,6 @@ Nota: por defecto, Supabase puede pedir que confirmes el email antes de poder in
 
 ## Pendiente / ideas para el QA
 
-- El récord histórico hoy se sobreescribe con cualquier valor que cargues, no valida que sea "mejor" que el anterior — eso queda a criterio del admin al cargarlo.
+- El récord histórico solo se actualiza si mejora, según el sentido de cada juego (`juegos.menor_es_mejor`). Si un juego no tiene sentido definido, se guarda lo que cargues, sin validar.
 - El gráfico de evolución usa el apodo del jugador como clave; si algún día cambiás un apodo, las líneas viejas del gráfico no se van a "fusionar" solas con el nuevo nombre.
 - Sería bueno paginar o buscar entre fechas si la temporada crece mucho.
