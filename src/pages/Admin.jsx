@@ -73,7 +73,7 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
   }
 
   useEffect(() => {
-    cargarBase()
+    cargarBase().catch((err) => setMensaje(`No se pudieron cargar los datos: ${err.message}`, true))
   }, [temporadaId])
 
   useEffect(() => {

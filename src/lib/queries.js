@@ -222,7 +222,8 @@ export async function getRanking(temporadaId) {
     if (participo(row)) totales[id].fechas_jugadas += 1
   }
 
-  const jugadores = Object.values(totales)
+  // Admin guarda una fila por jugador en cada fecha: quien no jugó ninguna no entra en la tabla
+  const jugadores = Object.values(totales).filter((j) => j.fechas_jugadas > 0)
   const hayFechaPrevia = data.some((r) => r.fecha.numero_fecha !== ultimaFecha)
   if (hayFechaPrevia) {
     const previos = [...jugadores].sort((a, b) => b.gemas_previas - a.gemas_previas || a.apodo.localeCompare(b.apodo))

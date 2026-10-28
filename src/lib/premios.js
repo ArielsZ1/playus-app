@@ -19,7 +19,7 @@ function elegir(candidatos, menorEsMejor = false) {
 function puestosPorFecha(jugadas, apodos) {
   const acumulado = Object.fromEntries(Object.keys(apodos).map((id) => [id, 0]))
   return jugadas.map((f) => {
-    for (const r of f.resultados) acumulado[r.jugador_id] += Number(r.gemas) || 0
+    for (const r of f.resultados) if (r.jugador_id in acumulado) acumulado[r.jugador_id] += Number(r.gemas) || 0
     const orden = Object.keys(acumulado).sort((a, b) => acumulado[b] - acumulado[a] || apodos[a].localeCompare(apodos[b]))
     return Object.fromEntries(orden.map((id, i) => [id, i + 1]))
   })
@@ -157,10 +157,15 @@ export function temporadaTerminada(temporada, fechas) {
 // Mismo resultado que getRanking() pero a partir de getFechas(), para calcular varias temporadas de una vez
 export function rankingDesdeFechas(fechas, apodos) {
   const gemas = {}
+  const jugaron = new Set()
   for (const f of fechas) {
-    for (const r of f.resultados || []) gemas[r.jugador_id] = (gemas[r.jugador_id] ?? 0) + (Number(r.gemas) || 0)
+    for (const r of f.resultados || []) {
+      gemas[r.jugador_id] = (gemas[r.jugador_id] ?? 0) + (Number(r.gemas) || 0)
+      if (participo(r)) jugaron.add(String(r.jugador_id))
+    }
   }
   return Object.entries(gemas)
+    .filter(([jugador_id]) => jugaron.has(jugador_id))
     .map(([jugador_id, total]) => ({ jugador_id, apodo: apodos[jugador_id] ?? '?', gemas: total }))
     .sort((a, b) => b.gemas - a.gemas || a.apodo.localeCompare(b.apodo))
 }
