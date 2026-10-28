@@ -41,12 +41,19 @@ export async function getJuegos() {
   return data
 }
 
-export async function createJuego({ nombre, descripcion }) {
+// menor_es_mejor: true = gana el valor más bajo (tiempo), false = el más alto, null = sin definir
+export async function createJuego({ nombre, descripcion, menor_es_mejor }) {
   const { data, error } = await supabase
     .from('juegos')
-    .insert([{ nombre, descripcion }])
+    .insert([{ nombre, descripcion, menor_es_mejor }])
     .select()
     .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateJuego(id, cambios) {
+  const { data, error } = await supabase.from('juegos').update(cambios).eq('id', id).select().single()
   if (error) throw error
   return data
 }

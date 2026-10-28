@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   getJuegos,
   createJuego,
+  updateJuego,
   getJugadores,
   createJugador,
   getFechas,
@@ -19,9 +20,32 @@ import {
   deletePremio,
 } from '../lib/queries.js'
 import { participo } from '../lib/fecha.js'
+import { resolverRecord } from '../lib/records.js'
 
 const inputClass =
   'w-full bg-panel2 border border-line px-3 py-2 text-sm focus:outline-none focus:border-gold'
+
+// El <select> maneja strings; en la base es boolean o null
+const SENTIDOS = [
+  ['', 'Sin definir (el récord se guarda tal cual)'],
+  ['false', 'Gana el valor más alto (puntos, niveles, %)'],
+  ['true', 'Gana el valor más bajo (tiempo)'],
+]
+const sentidoAValor = (v) => (v === '' ? null : v === 'true')
+const valorASentido = (v) => (v === null || v === undefined ? '' : String(v))
+
+function SelectorSentido({ value, onChange }) {
+  return (
+    <label className="block text-xs text-muted">
+      Récord histórico:
+      <select className={`${inputClass} mt-1`} value={value} onChange={(e) => onChange(e.target.value)}>
+        {SENTIDOS.map(([v, texto]) => (
+          <option key={v} value={v}>{texto}</option>
+        ))}
+      </select>
+    </label>
+  )
+}
 
 const FECHA_VACIA = { numero_fecha: '', fecha_calendario: '', juego_id: '', bonus_porcentaje: '', record_mundial: '' }
 
@@ -31,7 +55,7 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
   const [fechas, setFechas] = useState([])
   const [nuevoJugadorApodo, setNuevoJugadorApodo] = useState('')
 
-  const [nuevoJuego, setNuevoJuego] = useState({ nombre: '', descripcion: '' })
+  const [nuevoJuego, setNuevoJuego] = useState({ nombre: '', descripcion: '', menor_es_mejor: '' })
   const [mostrarNuevoJuego, setMostrarNuevoJuego] = useState(false)
 
   const [nuevaFecha, setNuevaFecha] = useState(FECHA_VACIA)
@@ -39,6 +63,8 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
 
   const [fechaSeleccionada, setFechaSeleccionada] = useState('')
   const [resultados, setResultados] = useState({})
+  // Récords como están en la base, para comparar contra lo que se escribe
+  const [recordsGuardados, setRecordsGuardados] = useState({})
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensajeEstado] = useState(null)
   const setMensaje = (texto, error = false) => setMensajeEstado(texto ? { texto, error } : null)
@@ -94,6 +120,7 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
       const fechaObj = fechas.find((f) => String(f.id) === String(fechaSeleccionada))
       if (fechaObj) {
         const historicos = await getRecordsPorJuego(fechaObj.juego_id)
+        setRecordsGuardados(historicos)
         Object.keys(base).forEach((jugadorId) => {
           if (historicos[jugadorId]) base[jugadorId].record_historico = historicos[jugadorId]
         })
@@ -133,10 +160,10 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
 
   const handleCrearJuego = conError(async (e) => {
     e.preventDefault()
-    const creado = await createJuego(nuevoJuego)
+    const creado = await createJuego({ ...nuevoJuego, menor_es_mejor: sentidoAValor(nuevoJuego.menor_es_mejor) })
     setJuegos((prev) => [...prev, creado])
     setNuevaFecha((prev) => ({ ...prev, juego_id: creado.id }))
-    setNuevoJuego({ nombre: '', descripcion: '' })
+    setNuevoJuego({ nombre: '', descripcion: '', menor_es_mejor: '' })
     setMostrarNuevoJuego(false)
   })
 
@@ -180,6 +207,12 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
     setFechaSeleccionada(resultado.id)
     setNuevaFecha(FECHA_VACIA)
     setEditandoFechaId(null)
+  })
+
+  const handleCambiarSentido = conError(async (juegoId, valor) => {
+    const actualizado = await updateJuego(juegoId, { menor_es_mejor: sentidoAValor(valor) })
+    setJuegos((prev) => prev.map((j) => (j.id === juegoId ? actualizado : j)))
+    setMensaje(`Récord de ${actualizado.nombre}: ${SENTIDOS.find(([v]) => v === valor)[1].toLowerCase()}.`)
   })
 
   function handleEditarFecha(fecha) {
@@ -231,18 +264,38 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
           sancionado: r.sancionado,
           nota: r.nota || null,
         }))
-      const historicos = Object.entries(resultados)
-        .filter(([, r]) => r.record_historico !== '' && r.record_historico !== null && r.record_historico !== undefined)
-        .map(([jugadorId, r]) => ({
-            jugador_id: jugadorId,
-            juego_id: fechaObj.juego_id,
-            valor: r.record_historico,
-          }))
+      // Con el sentido del juego definido, el récord solo cambia si mejora (o si la performance lo supera)
+      const juego = juegos.find((j) => j.id === fechaObj?.juego_id)
+      const apodo = (id) => jugadores.find((j) => j.id === id)?.apodo
+      const nuevos = []
+      const rechazados = []
+      const records = {}
+      for (const [jugadorId, r] of Object.entries(resultados)) {
+        const guardado = recordsGuardados[jugadorId]
+        const { valor, estado } = resolverRecord(
+          { guardado, ingresado: r.record_historico, performance: r.performance },
+          juego?.menor_es_mejor,
+        )
+        records[jugadorId] = valor ?? ''
+        if (estado === 'nuevo') nuevos.push(`${apodo(jugadorId)} (${valor})`)
+        if (estado === 'rechazado') rechazados.push(`${apodo(jugadorId)}: ${r.record_historico} no supera ${valor}`)
+      }
+      const historicos = Object.entries(records)
+        .filter(([jugadorId, valor]) => valor !== '' && valor !== recordsGuardados[jugadorId])
+        .map(([jugadorId, valor]) => ({ jugador_id: jugadorId, juego_id: fechaObj.juego_id, valor }))
       const guardados = await upsertResultados(resultadosParaGuardar)
       if (fechaObj?.juego_id) await upsertRecordsHistoricos(historicos)
       // Sin esto, al volver a abrir la fecha el formulario mostraría los datos viejos.
       setFechas((prev) => prev.map((f) => (f.id === fechaSeleccionada ? { ...f, resultados: guardados } : f)))
-      setMensaje('Resultados guardados correctamente.')
+      setRecordsGuardados((prev) => ({ ...prev, ...Object.fromEntries(historicos.map((h) => [h.jugador_id, h.valor])) }))
+      setResultados((prev) =>
+        Object.fromEntries(Object.entries(prev).map(([id, r]) => [id, { ...r, record_historico: records[id] }])),
+      )
+      const avisos = [
+        nuevos.length && `Nuevo récord histórico: ${nuevos.join(', ')}.`,
+        rechazados.length && `No se cambió el récord de ${rechazados.join('; ')}.`,
+      ].filter(Boolean)
+      setMensaje(['Resultados guardados correctamente.', ...avisos].join(' '))
     } catch (err) {
       setMensaje(`Error al guardar: ${err.message}`, true)
     } finally {
@@ -404,6 +457,14 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
             >
               + Crear un juego nuevo
             </button>
+            {nuevaFecha.juego_id && (
+              <div className="mt-2">
+                <SelectorSentido
+                  value={valorASentido(juegos.find((j) => j.id === nuevaFecha.juego_id)?.menor_es_mejor)}
+                  onChange={(v) => handleCambiarSentido(nuevaFecha.juego_id, v)}
+                />
+              </div>
+            )}
           </div>
 
           <input
@@ -436,6 +497,9 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
                 value={nuevoJuego.descripcion}
                 onChange={(e) => setNuevoJuego({ ...nuevoJuego, descripcion: e.target.value })}
               />
+              <div className="sm:col-span-2">
+                <SelectorSentido value={nuevoJuego.menor_es_mejor} onChange={(v) => setNuevoJuego({ ...nuevoJuego, menor_es_mejor: v })} />
+              </div>
               <button
                 type="button"
                 onClick={handleCrearJuego}
