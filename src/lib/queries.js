@@ -310,7 +310,7 @@ export async function getPerfilJugador(jugadorId) {
 export async function getFechasTodas() {
   const { data, error } = await supabase
     .from('fechas')
-    .select('id, numero_fecha, temporada_id, juego:juegos(nombre), resultados(jugador_id, performance, rivales_superados, gemas, jugo, sancionado)')
+    .select('id, numero_fecha, temporada_id, juego:juegos(nombre, menor_es_mejor), resultados(jugador_id, performance, rivales_superados, gemas, jugo, sancionado)')
     .order('numero_fecha')
   if (error) throw error
   return data

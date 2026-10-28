@@ -18,7 +18,7 @@ export default function Navbar({ temporadas, temporadaId, onChangeTemporada, ses
           )}
         </Link>
 
-        <nav className="flex items-center gap-1">
+        <nav className="flex flex-wrap items-center gap-1">
           <NavLink to="/" end className={({ isActive }) => `${navItem} ${isActive ? navItemActive : navItemInactive}`}>
             Ranking
           </NavLink>
@@ -31,6 +31,10 @@ export default function Navbar({ temporadas, temporadaId, onChangeTemporada, ses
           <NavLink to="/premios" className={({ isActive }) => `${navItem} ${isActive ? navItemActive : navItemInactive}`}>
             Premios
           </NavLink>
+          {/* El museo es otra página (museo/index.html), no una ruta de React */}
+          <a href="/museo/" className={`${navItem} ${navItemInactive}`}>
+            Museo
+          </a>
           <NavLink to="/admin" className={({ isActive }) => `${navItem} ${isActive ? navItemActive : navItemInactive}`}>
             Cargar datos
           </NavLink>
