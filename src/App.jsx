@@ -53,10 +53,10 @@ export default function App() {
         session={session}
       />
 
-      <main className="max-w-5xl mx-auto px-4 pb-24 pt-8">
+      <main className="max-w-6xl mx-auto px-4 pb-24 pt-8">
         {loading && <p className="text-muted">Cargando temporadas…</p>}
         {errorMsg && (
-          <div className="gem-panel-sm bg-ruby/10 border border-ruby text-ruby px-4 py-3">
+          <div className="gem-panel-sm bg-ruby/10 [--edge:#D14E5A] text-[#F07A84] px-4 py-3">
             No se pudo conectar con la base de datos: {errorMsg}
           </div>
         )}
@@ -84,8 +84,8 @@ export default function App() {
                 }
               />
               <Route path="/notas" element={temporadaId ? <Notas temporadaId={temporadaId} /> : noTemporada} />
-              <Route path="/jugador/:jugadorId" element={temporadaId ? <PerfilJugador /> : noTemporada} />
-              <Route path="/premios" element={temporadaId ? <Premios temporadaId={temporadaId} /> : noTemporada} />
+              <Route path="/jugador/:jugadorId" element={temporadaId ? <PerfilJugador temporadas={temporadas} /> : noTemporada} />
+              <Route path="/premios" element={temporadaId ? <Premios temporadaId={temporadaId} temporada={temporadas.find((t) => String(t.id) === String(temporadaId))} /> : noTemporada} />
               <Route
                 path="/historial"
                 element={

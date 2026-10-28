@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getFechaDetalle, getRecordsPorJuego, getRanking } from '../lib/queries.js'
+import { participo, compararEnFecha, puestoEnFecha } from '../lib/fecha.js'
 
 export default function FechaDetalle() {
   const { fechaId } = useParams()
@@ -33,6 +34,10 @@ export default function FechaDetalle() {
   if (errorMsg) return <p className="text-ruby">Error: {errorMsg}</p>
   if (!fecha) return null
 
+  // Quien no participó no tiene puesto y va al final
+  const resultados = [...fecha.resultados].sort((a, b) => participo(b) - participo(a) || compararEnFecha(a, b))
+  const puesto = (r) => puestoEnFecha(r, resultados)
+
   return (
     <div>
       <Link to="/" className="text-sm text-muted hover:text-gold">
@@ -40,7 +45,7 @@ export default function FechaDetalle() {
       </Link>
 
       <p className="stat-label mt-4">Fecha {fecha.numero_fecha}</p>
-      <h1 className="font-display text-2xl mb-2">{fecha.juego?.nombre}</h1>
+      <h1 className="font-display text-3xl sm:text-4xl mb-2">{fecha.juego?.nombre}</h1>
       {fecha.juego?.descripcion && <p className="text-muted mb-2 max-w-prose">{fecha.juego.descripcion}</p>}
 
       <div className="flex gap-6 mb-8 text-sm">
@@ -62,16 +67,20 @@ export default function FechaDetalle() {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-muted border-b border-line">
-              <th className="px-5 py-3 font-medium">Jugador</th>
-              <th className="px-5 py-3 font-medium">Performance</th>
-              <th className="px-5 py-3 font-medium">Récord histórico</th>
-              <th className="px-5 py-3 font-medium text-center">Rivales superados</th>
-              <th className="px-5 py-3 font-medium text-right">Gemas</th>
+              <th className="stat-label px-5 py-3">#</th>
+              <th className="stat-label px-5 py-3">Jugador</th>
+              <th className="stat-label px-5 py-3">Performance</th>
+              <th className="stat-label px-5 py-3">Récord histórico</th>
+              <th className="stat-label px-5 py-3 text-center">Rivales superados</th>
+              <th className="stat-label px-5 py-3 text-right">Gemas</th>
             </tr>
           </thead>
           <tbody>
-            {fecha.resultados.map((r) => (
+            {resultados.map((r) => (
               <tr key={r.id} className="border-b border-line last:border-0">
+                <td className={`px-5 py-3 font-display ${puesto(r) === 1 ? 'text-gold' : 'text-muted'}`}>
+                  {puesto(r) ? `${puesto(r)}°` : '—'}
+                </td>
                 <td className="px-5 py-3">
                   <Link to={`/jugador/${r.jugador_id}`} className="hover:text-gold">
                     {r.jugador?.apodo}

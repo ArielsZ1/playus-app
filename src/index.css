@@ -14,17 +14,33 @@
 
 @layer components {
   /* Panel con esquinas facetadas, como un corte de gema */
-  .gem-panel {
-    clip-path: polygon(0 14px, 14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
-    @apply bg-panel border border-line;
+  /* clip-path corta el borde en las diagonales; los dos gradientes las redibujan.
+     Van como background (no ::before) para no moverse en paneles con scroll horizontal.
+     Color del borde y del fondo: --edge y --fill (ej. hover:[--edge:#E8B54D]). */
+  .gem-panel,
+  .gem-panel-sm {
+    --cut: 14px;
+    --edge: theme('colors.line');
+    --fill: theme('colors.panel');
+    clip-path: polygon(0 var(--cut), var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%);
+    border: 1px solid var(--edge);
+    background:
+      linear-gradient(to bottom right, transparent calc(50% - 1px), var(--edge) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) left top / var(--cut) var(--cut) no-repeat border-box,
+      linear-gradient(to bottom right, transparent calc(50% - 1px), var(--edge) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) right bottom / var(--cut) var(--cut) no-repeat border-box,
+      var(--fill);
   }
 
   .gem-panel-sm {
-    clip-path: polygon(0 8px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+    --cut: 8px;
+    --fill: theme('colors.panel2');
+  }
+
+  .gem-panel-gold {
+    --edge: theme('colors.gold');
   }
 
   .stat-label {
-    @apply text-xs tracking-wide text-muted;
+    @apply text-xs font-medium uppercase tracking-wider text-muted;
   }
 
   :focus-visible {

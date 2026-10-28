@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient'
+import { participo } from './fecha.js'
 
 // ---------- Temporadas ----------
 export async function getTemporadas() {
@@ -51,12 +52,12 @@ export async function createJuego({ nombre, descripcion }) {
 }
 
 // ---------- Fechas ----------
-// Trae también los ids de resultados cargados, para poder marcar en el admin
-// qué fechas todavía no tienen ningún resultado cargado ("pendientes").
+// Trae también los resultados cargados: el admin los usa para marcar las fechas
+// "pendientes" y para precargar el formulario (sin ellos se guardarían ceros encima).
 export async function getFechas(temporadaId) {
   const { data, error } = await supabase
     .from('fechas')
-    .select('*, juego:juegos(*), resultados(id)')
+    .select('*, juego:juegos(*), resultados(id, jugador_id, performance, rivales_superados, gemas, jugo, sancionado, nota)')
     .eq('temporada_id', temporadaId)
     .order('numero_fecha')
   if (error) throw error
@@ -202,21 +203,33 @@ export async function upsertRecordsHistoricos(records) {
 export async function getRanking(temporadaId) {
   const { data, error } = await supabase
     .from('resultados')
-    .select('gemas, jugador:jugadores(id, apodo), fecha:fechas!inner(temporada_id)')
+    .select('gemas, jugo, performance, rivales_superados, jugador:jugadores(id, apodo), fecha:fechas!inner(temporada_id, numero_fecha)')
     .eq('fecha.temporada_id', temporadaId)
 
   if (error) throw error
 
+  // Para la flecha de tendencia: puesto que tenía cada uno antes de la última fecha cargada
+  const ultimaFecha = Math.max(...data.map((r) => r.fecha.numero_fecha))
   const totales = {}
   for (const row of data) {
     const id = row.jugador.id
     if (!totales[id]) {
-      totales[id] = { jugador_id: id, apodo: row.jugador.apodo, gemas: 0 }
+      totales[id] = { jugador_id: id, apodo: row.jugador.apodo, gemas: 0, gemas_previas: 0, fechas_jugadas: 0 }
     }
-    totales[id].gemas += Number(row.gemas) || 0
+    const gemas = Number(row.gemas) || 0
+    totales[id].gemas += gemas
+    if (row.fecha.numero_fecha !== ultimaFecha) totales[id].gemas_previas += gemas
+    if (participo(row)) totales[id].fechas_jugadas += 1
   }
 
-  return Object.values(totales).sort((a, b) => b.gemas - a.gemas || a.apodo.localeCompare(b.apodo))
+  const jugadores = Object.values(totales)
+  const hayFechaPrevia = data.some((r) => r.fecha.numero_fecha !== ultimaFecha)
+  if (hayFechaPrevia) {
+    const previos = [...jugadores].sort((a, b) => b.gemas_previas - a.gemas_previas || a.apodo.localeCompare(b.apodo))
+    previos.forEach((j, i) => (j.puesto_anterior = i + 1))
+  }
+
+  return jugadores.sort((a, b) => b.gemas - a.gemas || a.apodo.localeCompare(b.apodo))
 }
 
 export async function getEvolucionGemas(temporadaId) {
@@ -264,29 +277,29 @@ export async function getNotas(temporadaId) {
 }
 
 // ---------- Perfil de jugador ----------
-// Récords históricos (por juego) + historial de resultados en todas las temporadas.
+// Récords históricos (por juego) y premios especiales. El historial sale de getFechasTodas().
 export async function getPerfilJugador(jugadorId) {
-  const [jugador, records, resultados] = await Promise.all([
+  const [jugador, records, premios] = await Promise.all([
     supabase.from('jugadores').select('*').eq('id', jugadorId).single(),
     supabase.from('records_jugador_juego').select('*, juego:juegos(*)').eq('jugador_id', jugadorId),
-    supabase
-      .from('resultados')
-      .select('*, fecha:fechas(numero_fecha, temporada_id, juego:juegos(nombre), temporada:temporadas(nombre))')
-      .eq('jugador_id', jugadorId),
+    supabase.from('premios').select('*, temporada:temporadas(nombre)').eq('jugador_id', jugadorId),
   ])
 
   if (jugador.error) throw jugador.error
   if (records.error) throw records.error
-  if (resultados.error) throw resultados.error
+  if (premios.error) throw premios.error
 
-  const totalGemas = resultados.data.reduce((acc, r) => acc + (Number(r.gemas) || 0), 0)
+  return { jugador: jugador.data, records: records.data, premios: premios.data }
+}
 
-  return {
-    jugador: jugador.data,
-    records: records.data,
-    resultados: resultados.data,
-    totalGemas,
-  }
+// Todas las fechas de todas las temporadas con todos sus resultados: el puesto de un jugador depende de los demás.
+export async function getFechasTodas() {
+  const { data, error } = await supabase
+    .from('fechas')
+    .select('id, numero_fecha, temporada_id, juego:juegos(nombre), resultados(jugador_id, performance, rivales_superados, gemas, jugo, sancionado)')
+    .order('numero_fecha')
+  if (error) throw error
+  return data
 }
 
 // ---------- Premios ----------

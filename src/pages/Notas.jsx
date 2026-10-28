@@ -30,7 +30,7 @@ export default function Notas({ temporadaId }) {
 
   return (
     <div>
-      <h1 className="font-display text-2xl mb-8">Notas y sanciones</h1>
+      <h1 className="font-display text-3xl sm:text-4xl mb-8">Notas y sanciones</h1>
 
       {notas.length === 0 ? (
         <div className="gem-panel px-6 py-8 text-center text-muted">

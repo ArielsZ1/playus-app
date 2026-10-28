@@ -5,46 +5,74 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts'
 
-// Paleta cíclica para las líneas de cada jugador (no sabemos cuántos jugadores va a haber)
-const COLORES = ['#E8B54D', '#4E7FE8', '#3FAE7A', '#D14E5A', '#B18CFF', '#5FD1D8']
+// Paleta cíclica por puesto en el ranking; el Dashboard la usa también para los avatares
+export const COLORES = ['#E8B54D', '#6E9BFF', '#3FAE7A', '#F07A84', '#B18CFF', '#5FD1D8']
+
+// Convierte gemas acumuladas por fecha en puesto de temporada por fecha (mismo desempate que getRanking)
+function aPosiciones(datos, jugadores) {
+  return datos.map((punto) => {
+    const orden = [...jugadores].sort((a, b) => punto[b] - punto[a] || a.localeCompare(b))
+    const fila = { numero_fecha: punto.numero_fecha }
+    orden.forEach((apodo, i) => (fila[apodo] = i + 1))
+    return fila
+  })
+}
 
 export default function EvolucionChart({ datos, jugadores }) {
   if (!datos || datos.length === 0) return null
+  const posiciones = aPosiciones(datos, jugadores)
 
   return (
-    <div className="gem-panel p-6 mb-12">
-      <h2 className="font-display text-lg mb-4">Evolución de gemas por fecha</h2>
-      <ResponsiveContainer width="100%" height={280}>
-        <LineChart data={datos}>
-          <CartesianGrid stroke="#3A3168" strokeDasharray="3 3" />
+    <section className="gem-panel p-6" aria-labelledby="evolucion-titulo">
+      <h2 id="evolucion-titulo" className="font-display text-xl">Evolución de posiciones</h2>
+      <p className="text-sm text-muted mt-1 mb-4">Puesto en la temporada después de cada fecha</p>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={posiciones} margin={{ top: 10, right: 30, bottom: 0, left: -20 }}>
+          <CartesianGrid stroke="#2E2658" vertical={false} />
           <XAxis
             dataKey="numero_fecha"
             tickFormatter={(n) => `F${n}`}
-            stroke="#9C93C0"
-            tick={{ fill: '#9C93C0', fontSize: 12 }}
+            stroke="#B3ABD6"
+            tick={{ fill: '#B3ABD6', fontSize: 12 }}
           />
-          <YAxis stroke="#9C93C0" tick={{ fill: '#9C93C0', fontSize: 12 }} />
+          <YAxis
+            reversed
+            domain={[1, jugadores.length]}
+            allowDecimals={false}
+            interval={0}
+            ticks={jugadores.map((_, i) => i + 1)}
+            tickFormatter={(p) => `${p}°`}
+            stroke="#B3ABD6"
+            tick={{ fill: '#B3ABD6', fontSize: 12 }}
+          />
           <Tooltip
             contentStyle={{ background: '#1E1840', border: '1px solid #3A3168', color: '#F1EDFF' }}
             labelFormatter={(n) => `Fecha ${n}`}
+            formatter={(puesto, apodo) => [`${puesto}°`, apodo]}
+            itemSorter={(item) => item.value}
           />
-          <Legend wrapperStyle={{ fontSize: 12, color: '#9C93C0' }} />
           {jugadores.map((apodo, i) => (
             <Line
               key={apodo}
-              type="monotone"
+              type="linear"
               dataKey={apodo}
               stroke={COLORES[i % COLORES.length]}
-              strokeWidth={2}
-              dot={false}
+              strokeWidth={i === 0 ? 4 : 2.5}
+              dot={{ r: 4, strokeWidth: 0, fill: COLORES[i % COLORES.length] }}
+              label={(props) =>
+                props.index === posiciones.length - 1 ? (
+                  <text x={props.x + 10} y={props.y} dy={4} fill={COLORES[i % COLORES.length]} fontSize={12} fontWeight={600}>
+                    {apodo.charAt(0).toUpperCase()}
+                  </text>
+                ) : null
+              }
             />
           ))}
         </LineChart>
       </ResponsiveContainer>
-    </div>
+    </section>
   )
 }

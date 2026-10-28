@@ -9,10 +9,13 @@ const navItemInactive = 'text-muted'
 export default function Navbar({ temporadas, temporadaId, onChangeTemporada, session }) {
   return (
     <header className="border-b border-line">
-      <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between gap-4 flex-wrap">
+      <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4 flex-wrap">
         <Link to="/" className="flex items-center gap-2">
           <span className="w-3 h-3 bg-gold" style={{ clipPath: 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)' }} />
           <span className="font-display text-xl text-ink">Playus</span>
+          {import.meta.env.MODE === 'practica' && (
+            <span className="px-2 py-0.5 text-xs font-medium bg-ruby text-ink">PRÁCTICA</span>
+          )}
         </Link>
 
         <nav className="flex items-center gap-1">

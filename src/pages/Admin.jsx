@@ -18,6 +18,7 @@ import {
   createPremio,
   deletePremio,
 } from '../lib/queries.js'
+import { participo } from '../lib/fecha.js'
 
 const inputClass =
   'w-full bg-panel2 border border-line px-3 py-2 text-sm focus:outline-none focus:border-gold'
@@ -39,7 +40,19 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
   const [fechaSeleccionada, setFechaSeleccionada] = useState('')
   const [resultados, setResultados] = useState({})
   const [guardando, setGuardando] = useState(false)
-  const [mensaje, setMensaje] = useState(null)
+  const [mensaje, setMensajeEstado] = useState(null)
+  const setMensaje = (texto, error = false) => setMensajeEstado(texto ? { texto, error } : null)
+
+  // Envuelve un handler para que cualquier error de Supabase se muestre en vez de perderse.
+  const conError =
+    (handler) =>
+    async (...args) => {
+      try {
+        await handler(...args)
+      } catch (err) {
+        setMensaje(`Error: ${err.message}`, true)
+      }
+    }
 
   const [nuevaTemporada, setNuevaTemporada] = useState({ nombre: '', fecha_inicio: '', fecha_fin: '' })
 
@@ -118,30 +131,30 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
     autocompletarRecordMundial()
   }, [nuevaFecha.juego_id])
 
-  async function handleCrearJuego(e) {
+  const handleCrearJuego = conError(async (e) => {
     e.preventDefault()
     const creado = await createJuego(nuevoJuego)
     setJuegos((prev) => [...prev, creado])
     setNuevaFecha((prev) => ({ ...prev, juego_id: creado.id }))
     setNuevoJuego({ nombre: '', descripcion: '' })
     setMostrarNuevoJuego(false)
-  }
+  })
 
-  async function handleGuardarFecha(e) {
+  const handleGuardarFecha = conError(async (e) => {
     e.preventDefault()
     setMensaje(null)
     const numeroFecha = Number(nuevaFecha.numero_fecha)
     const bonus = nuevaFecha.bonus_porcentaje === '' ? null : Number(nuevaFecha.bonus_porcentaje)
     if (!Number.isInteger(numeroFecha) || numeroFecha < 1) {
-      setMensaje('El número de fecha debe ser un entero positivo.')
+      setMensaje('El número de fecha debe ser un entero positivo.', true)
       return
     }
     if (bonus !== null && (!Number.isFinite(bonus) || bonus < 0)) {
-      setMensaje('El bonus debe ser un número mayor o igual a cero.')
+      setMensaje('El bonus debe ser un número mayor o igual a cero.', true)
       return
     }
     if (!nuevaFecha.juego_id) {
-      setMensaje('Elegí un juego para la fecha.')
+      setMensaje('Elegí un juego para la fecha.', true)
       return
     }
     const payload = {
@@ -167,7 +180,7 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
     setFechaSeleccionada(resultado.id)
     setNuevaFecha(FECHA_VACIA)
     setEditandoFechaId(null)
-  }
+  })
 
   function handleEditarFecha(fecha) {
     setEditandoFechaId(fecha.id)
@@ -186,13 +199,13 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
     setNuevaFecha(FECHA_VACIA)
   }
 
-  async function handleBorrarFecha(fechaId) {
+  const handleBorrarFecha = conError(async (fechaId) => {
     if (!confirm('¿Seguro que querés borrar esta fecha? Se van a borrar también sus resultados.')) return
     await deleteFecha(fechaId)
     setFechas((prev) => prev.filter((f) => f.id !== fechaId))
     if (fechaSeleccionada === fechaId) setFechaSeleccionada('')
     setMensaje('Fecha borrada.')
-  }
+  })
 
   function actualizarCampoResultado(jugadorId, campo, valor) {
     setResultados((prev) => ({
@@ -213,7 +226,8 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
           performance: r.performance,
           rivales_superados: Number(r.rivales_superados) || 0,
           gemas: Number(r.gemas) || 0,
-          jugo: r.jugo,
+          // Una fila sin datos se guarda como "no jugó", así no hay que desmarcarla a mano
+          jugo: participo(r),
           sancionado: r.sancionado,
           nota: r.nota || null,
         }))
@@ -224,66 +238,80 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
             juego_id: fechaObj.juego_id,
             valor: r.record_historico,
           }))
-      await upsertResultados(resultadosParaGuardar)
+      const guardados = await upsertResultados(resultadosParaGuardar)
       if (fechaObj?.juego_id) await upsertRecordsHistoricos(historicos)
+      // Sin esto, al volver a abrir la fecha el formulario mostraría los datos viejos.
+      setFechas((prev) => prev.map((f) => (f.id === fechaSeleccionada ? { ...f, resultados: guardados } : f)))
       setMensaje('Resultados guardados correctamente.')
     } catch (err) {
-      setMensaje(`Error al guardar: ${err.message}`)
+      setMensaje(`Error al guardar: ${err.message}`, true)
     } finally {
       setGuardando(false)
     }
   }
 
-  async function handleBorrarResultado(jugadorId) {
+  const handleBorrarResultado = conError(async (jugadorId) => {
     if (!confirm('¿Borrar el resultado de este jugador en esta fecha?')) return
     await deleteResultado(fechaSeleccionada, jugadorId)
-    actualizarCampoResultado(jugadorId, 'performance', '')
-    actualizarCampoResultado(jugadorId, 'rivales_superados', 0)
-    actualizarCampoResultado(jugadorId, 'gemas', 0)
-    actualizarCampoResultado(jugadorId, 'sancionado', false)
-    actualizarCampoResultado(jugadorId, 'nota', '')
+    // Al cambiar `fechas` el formulario se vuelve a armar desde lo guardado.
+    setFechas((prev) =>
+      prev.map((f) =>
+        f.id === fechaSeleccionada
+          ? { ...f, resultados: (f.resultados || []).filter((r) => r.jugador_id !== jugadorId) }
+          : f
+      )
+    )
     setMensaje('Resultado borrado.')
-  }
+  })
 
-  async function handleCrearTemporada(e) {
+  const handleCrearTemporada = conError(async (e) => {
     e.preventDefault()
     const creada = await createTemporada(nuevaTemporada)
     setNuevaTemporada({ nombre: '', fecha_inicio: '', fecha_fin: '' })
     onTemporadaCreada?.(creada)
     setMensaje('Temporada creada. Seleccionala desde el menú de arriba.')
-  }
+  })
 
-  async function handleCrearJugador(e) {
+  const handleCrearJugador = conError(async (e) => {
     e.preventDefault()
     const creado = await createJugador(nuevoJugadorApodo)
     setJugadores((prev) => [...prev, creado].sort((a, b) => a.apodo.localeCompare(b.apodo)))
     setNuevoJugadorApodo('')
     setMensaje('Jugador agregado.')
-  }
+  })
 
-  async function handleCrearPremio(e) {
+  const handleCrearPremio = conError(async (e) => {
     e.preventDefault()
     const creado = await createPremio({ temporada_id: temporadaId, ...nuevoPremio })
     const jugador = jugadores.find((j) => j.id === creado.jugador_id)
     setPremios((prev) => [...prev, { ...creado, jugador: jugador ? { apodo: jugador.apodo } : null }])
     setNuevoPremio({ nombre: '', descripcion: '', jugador_id: '' })
     setMensaje('Premio agregado.')
-  }
+  })
 
-  async function handleBorrarPremio(id) {
+  const handleBorrarPremio = conError(async (id) => {
     if (!confirm('¿Borrar este premio?')) return
     await deletePremio(id)
     setPremios((prev) => prev.filter((p) => p.id !== id))
-  }
+  })
 
   return (
     <div className="space-y-12">
-      <h1 className="font-display text-2xl">Carga de datos</h1>
+      <h1 className="font-display text-3xl sm:text-4xl">Carga de datos</h1>
 
-      {mensaje && <div className="gem-panel-sm bg-emerald/10 border border-emerald text-emerald px-4 py-3 text-sm">{mensaje}</div>}
+      {mensaje && (
+        <div
+          role={mensaje.error ? 'alert' : 'status'}
+          className={`gem-panel-sm px-4 py-3 text-sm ${
+            mensaje.error ? 'bg-ruby/10 [--edge:#D14E5A] text-[#F07A84]' : 'bg-emerald/10 [--edge:#3FAE7A] text-emerald'
+          }`}
+        >
+          {mensaje.texto}
+        </div>
+      )}
 
       <section className="gem-panel p-6">
-        <h2 className="font-display text-lg mb-4">Nueva temporada</h2>
+        <h2 className="font-display text-xl mb-4">Nueva temporada</h2>
         <form onSubmit={handleCrearTemporada} className="grid sm:grid-cols-3 gap-3">
           <input
             required
@@ -311,7 +339,7 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
       </section>
 
       <section className="gem-panel p-6">
-        <h2 className="font-display text-lg mb-4">Jugadores</h2>
+        <h2 className="font-display text-xl mb-4">Jugadores</h2>
 
         <div className="flex flex-wrap gap-2 mb-4">
           {jugadores.map((j) => (
@@ -336,7 +364,7 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
       </section>
 
       <section className="gem-panel p-6">
-        <h2 className="font-display text-lg mb-4">
+        <h2 className="font-display text-xl mb-4">
           {editandoFechaId ? 'Editar fecha' : 'Nueva fecha'} — {temporadas.find((t) => t.id === temporadaId)?.nombre}
         </h2>
         <form onSubmit={handleGuardarFecha} className="grid sm:grid-cols-2 gap-3">
@@ -456,7 +484,7 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
       </section>
 
       <section className="gem-panel p-6">
-        <h2 className="font-display text-lg mb-4">Cargar resultados por jugador</h2>
+        <h2 className="font-display text-xl mb-4">Cargar resultados por jugador</h2>
 
         <select
           className={`${inputClass} mb-6`}
@@ -505,14 +533,24 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
                     value={r.gemas}
                     onChange={(e) => actualizarCampoResultado(j.id, 'gemas', e.target.value)}
                   />
-                  <label className="flex items-center gap-2 text-xs text-muted">
-                    <input
-                      type="checkbox"
-                      checked={r.sancionado}
-                      onChange={(e) => actualizarCampoResultado(j.id, 'sancionado', e.target.checked)}
-                    />
-                    Sancionado
-                  </label>
+                  <div className="flex flex-col gap-1">
+                    <label className="flex items-center gap-2 text-xs text-muted">
+                      <input
+                        type="checkbox"
+                        checked={r.jugo}
+                        onChange={(e) => actualizarCampoResultado(j.id, 'jugo', e.target.checked)}
+                      />
+                      Jugó
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-muted">
+                      <input
+                        type="checkbox"
+                        checked={r.sancionado}
+                        onChange={(e) => actualizarCampoResultado(j.id, 'sancionado', e.target.checked)}
+                      />
+                      Sancionado
+                    </label>
+                  </div>
                   <input
                     placeholder="Nota (opcional)"
                     className={`${inputClass} sm:col-span-5`}
@@ -541,7 +579,7 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
       </section>
 
       <section className="gem-panel p-6">
-        <h2 className="font-display text-lg mb-4">Premios de la temporada</h2>
+        <h2 className="font-display text-xl mb-4">Premios de la temporada</h2>
 
         {premios.length > 0 && (
           <div className="space-y-2 mb-6">

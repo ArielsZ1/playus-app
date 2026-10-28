@@ -22,7 +22,7 @@ export default function Historial({ temporadas, onSeleccionar }) {
 
   return (
     <div>
-      <h1 className="font-display text-2xl mb-8">Historial de temporadas</h1>
+      <h1 className="font-display text-3xl sm:text-4xl mb-8">Historial de temporadas</h1>
 
       {errorMsg && <p className="text-ruby mb-4" role="alert">No se pudo cargar el historial: {errorMsg}</p>}
 
@@ -34,7 +34,7 @@ export default function Historial({ temporadas, onSeleccionar }) {
             <button
               key={t.id}
               onClick={() => onSeleccionar(t.id)}
-              className="gem-panel-sm bg-panel2 p-5 text-left hover:border-gold border border-line transition-colors"
+              className="gem-panel-sm p-5 text-left hover:[--edge:#E8B54D] transition-colors"
             >
               <p className="font-display text-lg">{t.nombre}</p>
               <p className="stat-label mt-1">
