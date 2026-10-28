@@ -165,6 +165,12 @@ export async function deleteResultado(fechaId, jugadorId) {
   if (error) throw error
 }
 
+export async function deleteResultados(fechaId, jugadorIds) {
+  if (jugadorIds.length === 0) return
+  const { error } = await supabase.from('resultados').delete().eq('fecha_id', fechaId).in('jugador_id', jugadorIds)
+  if (error) throw error
+}
+
 // ---------- Récords históricos (por jugador + juego) ----------
 export async function getRecordsPorJuego(juegoId) {
   const { data, error } = await supabase

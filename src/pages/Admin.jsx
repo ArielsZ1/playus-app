@@ -11,6 +11,7 @@ import {
   deleteFecha,
   upsertResultados,
   deleteResultado,
+  deleteResultados,
   createTemporada,
   getRecordsPorJuego,
   upsertRecordsHistoricos,
@@ -253,13 +254,15 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
     setGuardando(true)
     setMensaje(null)
     try {
-      const resultadosParaGuardar = Object.entries(resultados).map(([jugadorId, r]) => ({
+      // Solo se guarda quien jugó (o tiene sanción o nota); los ausentes no generan fila
+      const resultadosParaGuardar = Object.entries(resultados)
+        .filter(([, r]) => participo(r) || r.sancionado || r.nota?.trim())
+        .map(([jugadorId, r]) => ({
           fecha_id: fechaSeleccionada,
           jugador_id: jugadorId,
           performance: r.performance,
           rivales_superados: Number(r.rivales_superados) || 0,
           gemas: Number(r.gemas) || 0,
-          // Una fila sin datos se guarda como "no jugó", así no hay que desmarcarla a mano
           jugo: participo(r),
           sancionado: r.sancionado,
           nota: r.nota || null,
@@ -283,7 +286,12 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
       const historicos = Object.entries(records)
         .filter(([jugadorId, valor]) => valor !== '' && valor !== recordsGuardados[jugadorId])
         .map(([jugadorId, valor]) => ({ jugador_id: jugadorId, juego_id: fechaObj.juego_id, valor }))
+      // Quien tenía fila y ahora quedó vacío (se cargó por error) se borra
+      const sobran = (fechaObj?.resultados || [])
+        .map((r) => r.jugador_id)
+        .filter((id) => !resultadosParaGuardar.some((g) => g.jugador_id === id))
       const guardados = await upsertResultados(resultadosParaGuardar)
+      await deleteResultados(fechaSeleccionada, sobran)
       if (fechaObj?.juego_id) await upsertRecordsHistoricos(historicos)
       // Sin esto, al volver a abrir la fecha el formulario mostraría los datos viejos.
       setFechas((prev) => prev.map((f) => (f.id === fechaSeleccionada ? { ...f, resultados: guardados } : f)))
