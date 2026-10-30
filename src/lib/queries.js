@@ -327,6 +327,12 @@ export async function getPremios(temporadaId) {
   return data
 }
 
+export async function getPremiosTodos() {
+  const { data, error } = await supabase.from('premios').select('id, jugador_id, temporada_id')
+  if (error) throw error
+  return data
+}
+
 export async function createPremio({ temporada_id, jugador_id, nombre, descripcion }) {
   const { data, error } = await supabase
     .from('premios')

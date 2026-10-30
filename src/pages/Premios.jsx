@@ -1,8 +1,89 @@
 import { Fragment, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getPremios, getRanking, getFechas } from '../lib/queries.js'
-import { calcularPremios, temporadaTerminada } from '../lib/premios.js'
+import { getPremios, getRanking, getFechas, getFechasTodas, getTemporadas, getJugadores, getPremiosTodos } from '../lib/queries.js'
+import { armarMedallero, calcularPremios, temporadaTerminada } from '../lib/premios.js'
 import IconoPremio from '../components/IconoPremio.jsx'
+
+// Un ícono por tipo de premio ganado, con ×N si lo ganó más de una vez
+function Medalla({ icono, nombre, detalle, cantidad, className = 'text-gold' }) {
+  const texto = `${nombre} ×${cantidad}${detalle ? ` · ${detalle}` : ''}`
+  return (
+    <span className={`relative inline-flex ${className}`} title={texto} aria-label={texto} role="img">
+      <IconoPremio nombre={icono} tamano={24} />
+      {cantidad > 1 && (
+        <span className="absolute -bottom-1 -right-2 rounded-full bg-base px-1 text-[10px] font-semibold leading-4 text-ink">
+          ×{cantidad}
+        </span>
+      )}
+    </span>
+  )
+}
+
+function Medallero() {
+  const [filas, setFilas] = useState(null)
+  const [errorMsg, setErrorMsg] = useState(null)
+
+  useEffect(() => {
+    let activo = true
+    Promise.all([getFechasTodas(), getTemporadas(), getJugadores(), getPremiosTodos()])
+      .then(([fechas, temporadas, jugadores, especiales]) => {
+        const apodos = Object.fromEntries(jugadores.map((j) => [j.id, j.apodo]))
+        if (activo) setFilas(armarMedallero(fechas, temporadas, apodos, especiales))
+      })
+      .catch((err) => {
+        if (activo) setErrorMsg(err.message)
+      })
+    return () => {
+      activo = false
+    }
+  }, [])
+
+  if (errorMsg) return <p className="text-ruby" role="alert">No se pudo cargar el palmarés: {errorMsg}</p>
+  if (!filas) return <p className="text-muted">Cargando palmarés…</p>
+  if (filas.length === 0) {
+    return <div className="gem-panel px-6 py-8 text-center text-muted">Los premios aparecen cuando termine la primera temporada.</div>
+  }
+  // Leyenda: en el celu no hay tooltip, así que se explica cada ícono que aparece
+  const tipos = {}
+  for (const f of filas) for (const x of Object.values(f.premios)) tipos[x.premio.id] ??= x
+  const leyenda = Object.values(tipos).sort((a, b) => a.orden - b.orden)
+  return (
+    <>
+    <ul className="flex flex-wrap gap-x-4 gap-y-2 mb-4 text-xs text-muted" aria-label="Qué significa cada ícono">
+      {leyenda.map(({ premio }) => (
+        <li key={premio.id} className="flex items-center gap-1.5">
+          <span className="text-gold"><IconoPremio nombre={premio.icono} tamano={16} /></span>
+          {premio.nombre}
+        </li>
+      ))}
+      {filas.some((f) => f.especiales > 0) && (
+        <li className="flex items-center gap-1.5">
+          <span className="text-sapphire"><IconoPremio nombre="medalla" tamano={16} /></span>
+          Premios especiales
+        </li>
+      )}
+    </ul>
+    <ol className="flex flex-col gap-2">
+      {filas.map((f, i) => (
+        <li key={f.jugador_id} className="gem-panel-sm px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-3">
+          <span className="w-6 text-muted font-semibold">{i + 1}</span>
+          <Link to={`/jugador/${f.jugador_id}`} className="font-display text-lg hover:text-gold min-w-32">
+            {f.apodo}
+          </Link>
+          <span className="flex flex-wrap items-center gap-4 ml-auto">
+            {Object.values(f.premios).sort((a, b) => a.orden - b.orden).map(({ premio, temporadas }) => (
+              <Medalla key={premio.id} icono={premio.icono} nombre={premio.nombre} detalle={temporadas.join(', ')} cantidad={temporadas.length} />
+            ))}
+            {f.especiales > 0 && (
+              <Medalla icono="medalla" nombre="Premios especiales" cantidad={f.especiales} className="text-sapphire" />
+            )}
+          </span>
+        </li>
+      ))}
+    </ol>
+    </>
+  )
+}
 
 function NombreJugador({ jugador, className }) {
   return (
@@ -135,6 +216,12 @@ export default function Premios({ temporadaId, temporada }) {
             ))}
           </div>
         )}
+      </section>
+
+      <section aria-labelledby="palmares-titulo">
+        <h2 id="palmares-titulo" className="font-display text-xl mb-1">Palmarés histórico</h2>
+        <p className="text-muted mb-4">Todos los premios ganados en temporadas terminadas. Tocá un jugador para ver el detalle.</p>
+        <Medallero />
       </section>
     </div>
   )

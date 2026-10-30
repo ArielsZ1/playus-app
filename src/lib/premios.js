@@ -169,3 +169,29 @@ export function rankingDesdeFechas(fechas, apodos) {
     .map(([jugador_id, total]) => ({ jugador_id, apodo: apodos[jugador_id] ?? '?', gemas: total }))
     .sort((a, b) => b.gemas - a.gemas || a.apodo.localeCompare(b.apodo))
 }
+
+// Medallero histórico: premios automáticos de cada temporada terminada + premios especiales, por jugador.
+// Orden: títulos, después total de premios, después apodo.
+export function armarMedallero(fechasTodas, temporadas, apodos, especiales) {
+  const filas = {}
+  const fila = (id) => (filas[id] ??= { jugador_id: id, apodo: apodos[id] ?? '?', premios: {}, especiales: 0, total: 0 })
+  for (const t of temporadas) {
+    const fechasT = fechasTodas.filter((f) => String(f.temporada_id) === String(t.id))
+    if (!temporadaTerminada(t, fechasT)) continue
+    calcularPremios(rankingDesdeFechas(fechasT, apodos), fechasT).forEach((p, orden) => {
+      for (const g of p.ganadores) {
+        const f = fila(String(g.jugador_id))
+        ;(f.premios[p.id] ??= { premio: p, orden, temporadas: [] }).temporadas.push(t.nombre)
+        f.total++
+      }
+    })
+  }
+  for (const e of especiales) {
+    if (e.jugador_id == null) continue
+    const f = fila(String(e.jugador_id))
+    f.especiales++
+    f.total++
+  }
+  const titulos = (f) => f.premios.campeon?.temporadas.length ?? 0
+  return Object.values(filas).sort((a, b) => titulos(b) - titulos(a) || b.total - a.total || a.apodo.localeCompare(b.apodo))
+}
