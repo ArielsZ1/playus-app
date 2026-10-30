@@ -74,6 +74,7 @@ function Medallero() {
             {Object.values(f.premios).sort((a, b) => a.orden - b.orden).map(({ premio, temporadas }) => (
               <Medalla key={premio.id} icono={premio.icono} nombre={premio.nombre} detalle={temporadas.join(', ')} cantidad={temporadas.length} />
             ))}
+            {f.total === 0 && <span className="text-sm text-muted">Sin premios todavía</span>}
             {f.especiales > 0 && (
               <Medalla icono="medalla" nombre="Premios especiales" cantidad={f.especiales} className="text-sapphire" />
             )}

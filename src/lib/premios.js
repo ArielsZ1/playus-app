@@ -175,6 +175,8 @@ export function rankingDesdeFechas(fechas, apodos) {
 export function armarMedallero(fechasTodas, temporadas, apodos, especiales) {
   const filas = {}
   const fila = (id) => (filas[id] ??= { jugador_id: id, apodo: apodos[id] ?? '?', premios: {}, especiales: 0, total: 0 })
+  // Aparece todo el que jugó alguna fecha, aunque no haya ganado nada
+  for (const f of fechasTodas) for (const r of f.resultados || []) if (participo(r)) fila(String(r.jugador_id))
   for (const t of temporadas) {
     const fechasT = fechasTodas.filter((f) => String(f.temporada_id) === String(t.id))
     if (!temporadaTerminada(t, fechasT)) continue
