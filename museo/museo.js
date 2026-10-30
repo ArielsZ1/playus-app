@@ -125,7 +125,7 @@ function createSparks() {
   scene.add(sparkParticles)
 }
 
-// Trofeo modelado por código: copa y pie por revolución, asas de medio toro, pedestal hexagonal y gema
+// Trofeo modelado por código (copa esbelta): copa y pie por revolución, asas de medio toro, pedestal hexagonal y gema
 function crearTrofeo() {
   const oro = new THREE.MeshStandardMaterial({ color: '#E8B54D', metalness: 1, roughness: 0.25, envMapIntensity: 0.9, side: THREE.DoubleSide })
   const pedestalMat = new THREE.MeshStandardMaterial({ color: '#251D4D', metalness: 0.4, roughness: 0.35, flatShading: true })
@@ -134,24 +134,25 @@ function crearTrofeo() {
   const trofeo = new THREE.Group()
 
   const copa = new THREE.Mesh(
-    new THREE.LatheGeometry(perfil([[0, 1.05], [0.3, 1.08], [0.58, 1.22], [0.76, 1.5], [0.86, 1.85], [0.92, 2.2], [0.98, 2.26], [0.9, 2.26], [0.82, 1.9], [0.7, 1.55], [0.5, 1.32], [0, 1.25]]), 96),
+    new THREE.LatheGeometry(perfil([[0, 1.6], [0.2, 1.62], [0.42, 1.78], [0.55, 2.1], [0.6, 2.5], [0.66, 2.64], [0.58, 2.64], [0.53, 2.5], [0.48, 2.12], [0.37, 1.86], [0, 1.76]]), 96),
     oro,
   )
   const pie = new THREE.Mesh(
-    new THREE.LatheGeometry(perfil([[0, -0.42], [0.62, -0.42], [0.62, -0.3], [0.45, -0.24], [0.2, -0.05], [0.12, 0.35], [0.24, 0.5], [0.26, 0.6], [0.24, 0.7], [0.12, 0.82], [0.14, 1.06], [0, 1.08]]), 96),
+    new THREE.LatheGeometry(perfil([[0, -0.42], [0.55, -0.42], [0.55, -0.32], [0.3, -0.25], [0.1, 0], [0.07, 0.6], [0.17, 0.74], [0.17, 0.86], [0.07, 1.0], [0.06, 1.5], [0.2, 1.62], [0, 1.64]]), 96),
     oro,
   )
   const asa = (lado) => {
-    const m = new THREE.Mesh(new THREE.TorusGeometry(0.36, 0.055, 20, 64, Math.PI), oro)
+    const m = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.04, 20, 64, Math.PI), oro)
     m.rotation.z = lado * Math.PI / 2
-    m.position.set(lado * -0.8, 1.72, 0)
+    m.scale.x = 1.9 // asa alargada en vertical (tras la rotación, x local es el alto)
+    m.position.set(lado * -0.56, 2.2, 0)
     return m
   }
   const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1, 0.45, 6), pedestalMat)
   pedestal.position.y = -0.65
-  gema = new THREE.Mesh(new THREE.OctahedronGeometry(0.2), gemaMat)
+  gema = new THREE.Mesh(new THREE.OctahedronGeometry(0.15), gemaMat)
   gema.scale.set(1, 1.35, 0.6)
-  gema.position.set(0, 1.72, 0.84)
+  gema.position.set(0, 2.2, 0.59)
 
   for (const m of [copa, pie, asa(1), asa(-1), pedestal, gema]) {
     m.castShadow = true
@@ -323,7 +324,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
 renderer.toneMapping = THREE.ACESFilmicToneMapping
-renderer.toneMappingExposure = 1.6
+renderer.toneMappingExposure = 1.4
 // Reflejos para que el metal se vea dorado y no negro
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture
 scene.add(new THREE.AmbientLight('#ffffff', 0.1))
