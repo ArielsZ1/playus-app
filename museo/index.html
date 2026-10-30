@@ -61,6 +61,10 @@ body{min-height:900vh;font-family:'Outfit',sans-serif;color:#fff;overflow-x:hidd
 .story-dash-fill{width:100%;height:0%;background:#fff;border-radius:2px}
 .grid-dot.top{top:10%}.grid-dot.bottom{top:90%}
 @media(max-width:760px){
+ /* en el celu el texto cae sobre la copa: velo oscuro abajo + sombra para que se lea */
+ .cinematic-container::before{content:'';position:absolute;left:0;right:0;bottom:0;height:62%;background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.6) 55%,transparent 100%);z-index:-1;pointer-events:none}
+ .slide-title,.slide-desc,.placa{text-shadow:0 2px 12px rgba(0,0,0,.95),0 0 3px rgba(0,0,0,.9)}
+ .slide-desc{color:#f1f1f4}
  .cinematic-container{padding:0 24px 34px}.main-header{padding:22px 0}.brand{font-size:11px;letter-spacing:3px}
  .header-nav{gap:9px}.nav-link{font-size:8px;letter-spacing:1px}.nav-dot{display:none}.contact-btn{padding:9px 12px;font-size:8px}
  .slide-title{font-size:clamp(46px,12vw,76px);margin-bottom:14px}
