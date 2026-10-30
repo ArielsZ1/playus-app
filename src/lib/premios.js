@@ -1,5 +1,5 @@
 // Premios automáticos de una temporada, calculados con getRanking() + getFechas().
-import { estadisticasPorJugador, participo, puestoEnFecha, seJugo } from './fecha.js'
+import { estadisticasPorJugador, fechaCerrada, participo, puestoEnFecha, seJugo } from './fecha.js'
 
 const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`
 const promedio = (n) => n.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
@@ -151,7 +151,7 @@ export function calcularPremios(ranking, fechas) {
 // Con fecha de fin, la temporada termina cuando pasa ese día; sin ella, cuando se jugaron todas las fechas.
 export function temporadaTerminada(temporada, fechas) {
   if (temporada?.fecha_fin) return temporada.fecha_fin < new Date().toLocaleDateString('sv')
-  return fechas.length > 0 && fechas.every(seJugo)
+  return fechas.length > 0 && fechas.every(fechaCerrada)
 }
 
 // Mismo resultado que getRanking() pero a partir de getFechas(), para calcular varias temporadas de una vez

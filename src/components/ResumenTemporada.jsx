@@ -1,4 +1,4 @@
-import { ganadoresDeFecha, seJugo } from '../lib/fecha.js'
+import { fechaCerrada, ganadoresDeFecha, seJugo } from '../lib/fecha.js'
 
 function Dato({ etiqueta, children, detalle }) {
   return (
@@ -13,17 +13,18 @@ function Dato({ etiqueta, children, detalle }) {
 export default function ResumenTemporada({ ranking, fechas }) {
   const jugadas = fechas.filter(seJugo)
   const ultima = jugadas[jugadas.length - 1]
-  const proxima = fechas.find((f) => !seJugo(f))
+  const proxima = fechas.find((f) => !fechaCerrada(f))
+  const cerradas = fechas.filter(fechaCerrada).length
   const [lider, segundo] = ranking
   const apodos = Object.fromEntries(ranking.map((j) => [j.jugador_id, j.apodo]))
-  const progreso = fechas.length ? Math.round((jugadas.length / fechas.length) * 100) : 0
+  const progreso = fechas.length ? Math.round((cerradas / fechas.length) * 100) : 0
 
   return (
     <section className="gem-panel gem-panel-gold px-6 py-6 sm:px-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" aria-label="Resumen de la temporada">
       <div className="flex flex-col gap-1.5">
         <span className="stat-label">Progreso</span>
         <span className="font-display text-2xl">
-          Fecha {jugadas.length} <span className="text-[1rem] text-muted">de {fechas.length}</span>
+          Fecha {cerradas} <span className="text-[1rem] text-muted">de {fechas.length}</span>
         </span>
         <div
           className="h-1.5 bg-panel2 mt-1"

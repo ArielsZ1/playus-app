@@ -105,6 +105,11 @@ export async function updateFecha(id, { numero_fecha, fecha_calendario, juego_id
   return data
 }
 
+export async function setFechaSinJugadores(id, sinJugadores) {
+  const { error } = await supabase.from('fechas').update({ sin_jugadores: sinJugadores }).eq('id', id)
+  if (error) throw error
+}
+
 export async function deleteFecha(id) {
   const { error } = await supabase.from('fechas').delete().eq('id', id)
   if (error) throw error
@@ -310,7 +315,7 @@ export async function getPerfilJugador(jugadorId) {
 export async function getFechasTodas() {
   const { data, error } = await supabase
     .from('fechas')
-    .select('id, numero_fecha, temporada_id, juego:juegos(nombre, menor_es_mejor), resultados(jugador_id, performance, rivales_superados, gemas, jugo, sancionado)')
+    .select('id, numero_fecha, temporada_id, sin_jugadores, juego:juegos(nombre, menor_es_mejor), resultados(jugador_id, performance, rivales_superados, gemas, jugo, sancionado)')
     .order('numero_fecha')
   if (error) throw error
   return data

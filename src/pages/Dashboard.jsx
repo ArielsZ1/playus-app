@@ -5,6 +5,7 @@ import { getRanking, getFechas, getEvolucionGemas } from '../lib/queries.js'
 import { estadisticasPorJugador, ganadoresDeFecha, seJugo } from '../lib/fecha.js'
 import Podio from '../components/Podio.jsx'
 import ResumenTemporada from '../components/ResumenTemporada.jsx'
+import PreviaFecha from '../components/PreviaFecha.jsx'
 import EvolucionChart, { COLORES } from '../components/EvolucionChart.jsx'
 import MapaCalor from '../components/MapaCalor.jsx'
 
@@ -115,6 +116,7 @@ export default function Dashboard({ temporadaId }) {
       ) : (
         <>
           <ResumenTemporada ranking={ranking} fechas={fechas} />
+          <PreviaFecha ranking={ranking} fechas={fechas} />
 
           <div ref={capturaRef} className="p-4 -m-4">
             <Podio top3={top3} />
@@ -205,7 +207,7 @@ export default function Dashboard({ temporadaId }) {
                   <span className="font-display">{f.juego?.nombre || 'Juego sin definir'}</span>
                   <span className={`flex items-center gap-2 text-sm truncate ${jugada ? 'text-gold' : 'text-muted'}`}>
                     <Trofeo />
-                    {jugada ? `Ganó ${ganadoresDeFecha(f).map((id) => apodos[id]).join(', ')}` : 'Por jugarse'}
+                    {jugada ? `Ganó ${ganadoresDeFecha(f).map((id) => apodos[id]).join(', ')}` : f.sin_jugadores ? 'No se jugó' : 'Por jugarse'}
                   </span>
                 </Link>
               )

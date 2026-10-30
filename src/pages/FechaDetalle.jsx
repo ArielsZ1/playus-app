@@ -63,6 +63,10 @@ export default function FechaDetalle() {
         )}
       </div>
 
+      {fecha.sin_jugadores && !resultados.some(participo) && (
+        <p className="gem-panel-sm px-5 py-4 mb-6 text-muted">Esta fecha se cerró sin jugadores: nadie sumó gemas.</p>
+      )}
+
       <div className="gem-panel overflow-x-auto">
         <table className="w-full text-sm">
           <thead>

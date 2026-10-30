@@ -8,6 +8,7 @@ import {
   getFechas,
   createFecha,
   updateFecha,
+  setFechaSinJugadores,
   deleteFecha,
   upsertResultados,
   deleteResultado,
@@ -20,7 +21,7 @@ import {
   createPremio,
   deletePremio,
 } from '../lib/queries.js'
-import { participo } from '../lib/fecha.js'
+import { participo, seJugo } from '../lib/fecha.js'
 import { resolverRecord } from '../lib/records.js'
 
 const inputClass =
@@ -232,6 +233,13 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
     setEditandoFechaId(null)
     setNuevaFecha(FECHA_VACIA)
   }
+
+  const handleSinJugadores = conError(async (fecha) => {
+    const valor = !fecha.sin_jugadores
+    await setFechaSinJugadores(fecha.id, valor)
+    setFechas((prev) => prev.map((f) => (f.id === fecha.id ? { ...f, sin_jugadores: valor } : f)))
+    setMensaje(valor ? `Fecha ${fecha.numero_fecha} cerrada: nadie jugó.` : `Fecha ${fecha.numero_fecha} vuelve a estar pendiente.`)
+  })
 
   const handleBorrarFecha = conError(async (fechaId) => {
     if (!confirm('¿Seguro que querés borrar esta fecha? Se van a borrar también sus resultados.')) return
@@ -537,11 +545,19 @@ export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
               <div key={f.id} className="flex items-center justify-between gem-panel-sm bg-panel2 px-4 py-2 text-sm">
                 <span>
                   Fecha {f.numero_fecha} — {f.juego?.nombre}
-                  {(!f.resultados || f.resultados.length === 0) && (
+                  {f.sin_jugadores && !seJugo(f) && (
+                    <span className="ml-2 text-xs text-muted border border-muted px-1.5 py-0.5">nadie jugó</span>
+                  )}
+                  {(!f.resultados || f.resultados.length === 0) && !f.sin_jugadores && (
                     <span className="ml-2 text-xs text-gold border border-gold px-1.5 py-0.5">pendiente</span>
                   )}
                 </span>
                 <span className="flex gap-3">
+                  {!seJugo(f) && (
+                    <button onClick={() => handleSinJugadores(f)} className="text-muted hover:text-ink">
+                      {f.sin_jugadores ? 'Reabrir' : 'Nadie jugó'}
+                    </button>
+                  )}
                   <button onClick={() => handleEditarFecha(f)} className="text-sapphire hover:brightness-125">
                     Editar
                   </button>

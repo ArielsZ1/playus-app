@@ -21,6 +21,11 @@ export function seJugo(fecha) {
   return (fecha.resultados || []).some(participo)
 }
 
+// Ya no está pendiente: se jugó, o el admin la cerró porque nadie jugó
+export function fechaCerrada(fecha) {
+  return Boolean(fecha.sin_jugadores) || seJugo(fecha)
+}
+
 // jugador_id de quienes terminaron 1° (puede haber empate)
 export function ganadoresDeFecha(fecha) {
   const resultados = fecha.resultados || []
