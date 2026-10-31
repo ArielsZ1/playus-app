@@ -3,6 +3,7 @@ import { toBlob } from 'html-to-image'
 import { useParams, Link } from 'react-router-dom'
 import { getPerfilJugador, getFechasTodas, getJugadores } from '../lib/queries.js'
 import { analizarJugador } from '../lib/perfil.js'
+import { participo } from '../lib/fecha.js'
 import IconoPremio from '../components/IconoPremio.jsx'
 
 const ATRIBUTOS = [
@@ -157,6 +158,88 @@ async function compartirImagen(nodo, nombreArchivo) {
   URL.revokeObjectURL(url)
 }
 
+// Dos fichas lado a lado + cuántas veces terminó cada uno arriba del otro en las fechas que jugaron juntos
+function Comparador({ jugadorId, apodo, ficha, historial, datos, temporadas }) {
+  const [rivalId, setRivalId] = useState('')
+  const opciones = Object.entries(datos.apodos)
+    .filter(([id]) => String(id) !== String(jugadorId) && datos.jugaron.has(String(id)))
+    .sort((a, b) => a[1].localeCompare(b[1]))
+  const otro = rivalId ? analizarJugador(rivalId, datos.fechas, temporadas, datos.apodos) : null
+
+  let duelo = null
+  if (otro) {
+    const suyo = Object.fromEntries(otro.historial.map((h) => [h.fecha.id, h.puesto]))
+    duelo = { gano: 0, perdio: 0, empate: 0 }
+    for (const h of historial) {
+      if (!(h.fecha.id in suyo)) continue
+      const p = suyo[h.fecha.id]
+      if (h.puesto < p) duelo.gano++
+      else if (h.puesto > p) duelo.perdio++
+      else duelo.empate++
+    }
+  }
+  const fila = (etiqueta, a, b, mayorEsMejor = true) => {
+    const ganaA = mayorEsMejor ? a > b : a < b
+    const ganaB = mayorEsMejor ? b > a : b < a
+    return (
+      <div key={etiqueta} className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-sm">
+        <span className={`text-right tabular-nums ${ganaA ? 'text-gold font-semibold' : 'text-muted'}`}>{a}</span>
+        <span className="stat-label text-center w-28">{etiqueta}</span>
+        <span className={`tabular-nums ${ganaB ? 'text-gold font-semibold' : 'text-muted'}`}>{b}</span>
+      </div>
+    )
+  }
+  const f2 = otro?.ficha
+  return (
+    <div className="flex flex-col gap-4">
+      <label className="flex flex-wrap items-center gap-3 text-sm">
+        <span className="text-muted">Comparar con</span>
+        <select
+          id="comparar-con"
+          value={rivalId}
+          onChange={(e) => setRivalId(e.target.value)}
+          className="bg-panel2 border border-line px-3 py-2 min-h-[44px] text-ink"
+        >
+          <option value="">Elegí un jugador…</option>
+          {opciones.map(([id, a]) => (
+            <option key={id} value={id}>{a}</option>
+          ))}
+        </select>
+      </label>
+      {otro && (
+        <div className="gem-panel p-5 flex flex-col gap-3">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-baseline gap-3">
+            <span className="text-right font-display text-lg truncate">{apodo}</span>
+            <span className="stat-label text-center w-28">vs</span>
+            <Link to={`/jugador/${rivalId}`} className="font-display text-lg truncate hover:text-gold">{datos.apodos[rivalId]}</Link>
+          </div>
+          {duelo && (duelo.gano + duelo.perdio + duelo.empate > 0 ? (
+            <p className="text-center text-sm">
+              Juntos: <span className="text-gold font-semibold tabular-nums">{duelo.gano}–{duelo.perdio}</span>
+              {duelo.empate > 0 && <span className="text-muted"> ({duelo.empate} empate{duelo.empate > 1 ? 's' : ''})</span>}
+              <span className="text-muted"> en fechas que terminó arriba</span>
+            </p>
+          ) : (
+            <p className="text-center text-sm text-muted">Nunca jugaron una fecha juntos.</p>
+          ))}
+          {ficha && f2 ? (
+            <>
+              {fila('General', ficha.general, f2.general)}
+              {ATRIBUTOS.map(([clave, etiqueta]) => fila(etiqueta, ficha.atributos[clave], f2.atributos[clave]))}
+              {fila('Títulos', ficha.titulos, f2.titulos)}
+              {fila('Victorias', ficha.victorias, f2.victorias)}
+              {fila('Podios', ficha.podios, f2.podios)}
+              {fila('Fechas', ficha.n, f2.n)}
+            </>
+          ) : (
+            <p className="text-center text-sm text-muted">Falta jugar fechas para comparar las fichas.</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function PerfilJugador({ temporadas }) {
   const { jugadorId } = useParams()
   const capturaRef = useRef(null)
@@ -164,6 +247,7 @@ export default function PerfilJugador({ temporadas }) {
   const [errorCompartir, setErrorCompartir] = useState(null)
   const [perfil, setPerfil] = useState(null)
   const [analisis, setAnalisis] = useState(null)
+  const [datos, setDatos] = useState(null)
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState(null)
 
@@ -177,6 +261,8 @@ export default function PerfilJugador({ temporadas }) {
         const apodos = Object.fromEntries(jugadores.map((j) => [j.id, j.apodo]))
         setPerfil(perfilData)
         setAnalisis(analizarJugador(jugadorId, fechas, temporadas, apodos))
+        const jugaron = new Set(fechas.flatMap((f) => f.resultados.filter(participo).map((r) => String(r.jugador_id))))
+        setDatos({ fechas, apodos, jugaron })
       })
       .catch((err) => {
         if (activo) setErrorMsg(err.message)
@@ -291,11 +377,12 @@ export default function PerfilJugador({ temporadas }) {
         <Palmares palmares={palmares} especiales={premios} />
       </section>
 
-      {ficha && ficha.rivales.length > 0 && (
+      {datos && (
         <section>
           <h2 className="font-display text-xl mb-1">Cara a cara</h2>
           <p className="text-sm text-muted mb-4">Fechas en las que terminó por encima de cada rival (mínimo 5 fechas juntos).</p>
-          <div className="gem-panel p-5 flex flex-col gap-3">
+          {ficha?.rivales.length > 0 && (
+          <div className="gem-panel p-5 flex flex-col gap-3 mb-6">
             {[...ficha.rivales].reverse().map((r) => (
               <div key={r.jugador_id} className="grid grid-cols-[minmax(0,8rem)_1fr_auto] items-center gap-3 text-sm">
                 <Link to={`/jugador/${r.jugador_id}`} className="truncate hover:text-gold">{r.apodo}</Link>
@@ -308,6 +395,8 @@ export default function PerfilJugador({ temporadas }) {
               </div>
             ))}
           </div>
+          )}
+          <Comparador key={jugadorId} jugadorId={jugadorId} apodo={jugador.apodo} ficha={ficha} historial={historial} datos={datos} temporadas={temporadas} />
         </section>
       )}
 
