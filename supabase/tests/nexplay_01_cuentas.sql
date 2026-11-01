@@ -4,7 +4,7 @@
 do $$
 declare
   adm uuid; u1 uuid := gen_random_uuid(); u2 uuid := gen_random_uuid();
-  jx uuid; cod text; cod_venc text := 'VENCIDO1'; msg text; r cuentas; n int; b boolean;
+  jx uuid; st text; cod text; cod_venc text := 'VENCIDO1'; msg text; r cuentas; n int; b boolean;
 begin
   select user_id into adm from cuentas where es_admin limit 1;
   select id into jx from jugadores limit 1;
@@ -65,10 +65,27 @@ begin
 
   -- 9 RLS
   perform set_config('request.jwt.claims', json_build_object('sub',u1,'role','authenticated')::text, true);
-  begin insert into cuentas(user_id) values (gen_random_uuid()); msg := null; exception when others then msg := sqlerrm; end;
-  if msg is null then raise exception 'FALLA: 9a insert directo permitido'; end if;
+  -- 9a escritura directa denegada por privilegios (42501), no por FK
+  begin insert into cuentas(user_id) values (u1); st := null; exception when others then st := sqlstate; end;
+  if st is distinct from '42501' then raise exception 'FALLA: 9a insert directo (%)', st; end if;
+  -- 9c auto-promocion: error 42501 o 0 filas, y sigue sin ser admin
+  begin
+    update cuentas set es_admin = true, estado = 'aceptado' where user_id = u1;
+    get diagnostics n = row_count; st := case when n = 0 then '42501' else 'FILAS' end;
+  exception when others then st := sqlstate; end;
+  if st is distinct from '42501' then raise exception 'FALLA: 9c update directo (%)', st; end if;
+  if es_admin() then raise exception 'FALLA: 9c u1 se hizo admin'; end if;
   select count(*) into n from invitaciones;
   if n <> 0 then raise exception 'FALLA: 9b invitaciones visibles %', n; end if;
+
+  -- 10 anon no ve datos personales ni codigos en auditoria
+  perform set_config('role','anon',true);
+  perform set_config('request.jwt.claims','{}',true);
+  select count(*) into n from auditoria;
+  if n < 3 then raise exception 'FALLA: 10a auditoria vacia %', n; end if;
+  if exists (select 1 from auditoria a where a.antes::text ~ 'email|nombre|invitacion' or a.despues::text ~ 'email|nombre|invitacion'
+             or a.despues::text like '%'||cod||'%' or a.antes::text like '%'||cod||'%') then
+    raise exception 'FALLA: 10b auditoria filtra datos'; end if;
 
   perform set_config('role','postgres',true);
   raise exception 'TEST_OK';
