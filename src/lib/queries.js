@@ -371,6 +371,13 @@ export async function registrarseConCodigo(codigo) {
   return data
 }
 
+// cuentas.jugador_id apunta a public.jugadores: en modo práctica no sirve getJugadores().
+export async function getJugadoresNexplay() {
+  const { data, error } = await nx.from('jugadores').select('id, apodo').order('apodo')
+  if (error) throw error
+  return data
+}
+
 export async function crearInvitacion() {
   const { data, error } = await nx.rpc('nx_crear_invitacion')
   if (error) throw error

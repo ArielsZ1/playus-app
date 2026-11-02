@@ -59,6 +59,8 @@
   .nx-btn-primary:hover:not(:disabled) { background: #EDC163; }
   .nx-btn-secondary { @apply bg-panel2 text-ink border border-line2; }
   .nx-btn-secondary:hover:not(:disabled) { @apply bg-panel3; }
+  .nx-btn-danger { @apply bg-error-bg text-ruby border border-ruby; }
+  .nx-btn-danger:hover:not(:disabled) { background: #5A2230; }
   .nx-input {
     --cut: 8px;
     clip-path: polygon(0 var(--cut), var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%);

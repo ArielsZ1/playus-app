@@ -10,6 +10,18 @@ export function codigoDeError(err) {
   return texto.match(/\b(codigo_invalido|no_autenticado|solo_admin|cuenta_inexistente|jugador_ya_vinculado|falta_jugador|no_podes_bloquearte)\b/)?.[1] ?? null
 }
 
+// Contrato de estados, sección 4. Lo que no está acá cae en el error de red.
+const TEXTOS_ERROR = {
+  codigo_invalido: 'El link de invitación no es válido o venció. Pedile uno nuevo al admin.',
+  cuenta_inexistente: 'Esa cuenta ya no existe. Actualizamos la lista.',
+  jugador_ya_vinculado: 'Ese jugador ya tiene cuenta. Actualizamos la lista.',
+  falta_jugador: 'Elegí un jugador o escribí un apodo.',
+  no_podes_bloquearte: 'No podés bloquear tu propia cuenta.',
+}
+export function textoDeError(codigo) {
+  return TEXTOS_ERROR[codigo] ?? MENSAJE_RED
+}
+
 export function nombreVisible(cuenta) {
   return cuenta?.jugador?.apodo ?? cuenta?.nombre ?? cuenta?.email ?? ''
 }

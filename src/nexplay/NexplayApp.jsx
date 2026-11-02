@@ -6,6 +6,7 @@ import { borrarCodigo, leerCodigo } from './invitacion.js'
 import { Cargando, Chip, ErrorRed, Marco, PanelAviso, codigoDeError, nombreVisible } from './componentes.jsx'
 import Entrar from './pages/Entrar.jsx'
 import Inicio from './pages/Inicio.jsx'
+import AdminJugadores from './pages/AdminJugadores.jsx'
 
 // Google devuelve los errores en ?error= o en #error=. Se lee una sola vez y se limpia la URL.
 function leerErrorGoogle() {
@@ -106,7 +107,9 @@ export default function NexplayApp() {
     contenido = (
       <Routes>
         <Route path="/" element={<Inicio cuenta={cuenta} />} />
-        {/* shortcut: /admin vuelve a Inicio hasta que exista AdminJugadores (Task 5) */}
+        {cuenta.es_admin && (
+          <Route path="/admin" element={<AdminJugadores cuenta={cuenta} recargarCuenta={recargarCuenta} />} />
+        )}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
