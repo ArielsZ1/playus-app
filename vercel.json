@@ -1,6 +1,8 @@
 {
   "rewrites": [
     { "source": "/museo", "destination": "/museo/index.html" },
+    { "source": "/nexplay", "destination": "/nexplay/index.html" },
+    { "source": "/nexplay/(.*)", "destination": "/nexplay/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

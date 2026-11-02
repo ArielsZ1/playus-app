@@ -46,6 +46,38 @@
   :focus-visible {
     @apply outline-none ring-2 ring-gold ring-offset-2 ring-offset-base;
   }
+
+  /* ---------- NEXPLAY (skill nexplay-design) ---------- */
+  .nx-btn {
+    --cut: 8px;
+    clip-path: polygon(0 var(--cut), var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%);
+    @apply inline-flex w-full items-center justify-center gap-2 min-h-[48px] px-6 text-body font-semibold transition duration-150;
+  }
+  .nx-btn:active:not(:disabled) { transform: translateY(2px) scale(0.98); }
+  .nx-btn:disabled { @apply opacity-40 cursor-default; }
+  .nx-btn-primary { @apply h-14 bg-gold text-[#14102A] font-display font-bold uppercase tracking-wide; }
+  .nx-btn-primary:hover:not(:disabled) { background: #EDC163; }
+  .nx-btn-secondary { @apply bg-panel2 text-ink border border-line2; }
+  .nx-btn-secondary:hover:not(:disabled) { @apply bg-panel3; }
+  .nx-input {
+    --cut: 8px;
+    clip-path: polygon(0 var(--cut), var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%);
+    @apply w-full h-12 px-4 bg-panel3 border border-line2 text-body text-ink placeholder:text-faint;
+  }
+  .nx-chip {
+    --cut: 8px;
+    clip-path: polygon(0 var(--cut), var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%);
+    @apply inline-flex items-center h-7 px-2.5 text-caption font-semibold border;
+  }
+  /* el clip-path corta el anillo de afuera: en NEXPLAY el foco va adentro */
+  .nx-btn:focus-visible,
+  .nx-input:focus-visible,
+  .nx-input:focus { @apply ring-0 ring-offset-0; box-shadow: inset 0 0 0 2px theme('colors.gold'); }
+  .nx-btn-primary:focus-visible { box-shadow: inset 0 0 0 2px theme('colors.base'); }
+  @media (prefers-reduced-motion: reduce) {
+    .nx-btn { transition: none; }
+    .nx-btn:active:not(:disabled) { transform: none; }
+  }
 }
 
 /* ---------- Intro: telón + trofeo (src/components/Intro.jsx) ---------- */
