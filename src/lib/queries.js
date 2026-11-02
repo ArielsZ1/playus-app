@@ -352,3 +352,45 @@ export async function deletePremio(id) {
   const { error } = await supabase.from('premios').delete().eq('id', id)
   if (error) throw error
 }
+// ---------- NEXPLAY — cuentas ----------
+// Las tablas y RPCs de NEXPLAY viven en `public` aunque la app esté en modo práctica.
+const nx = supabase.schema('public')
+const CUENTA_SELECT = '*, jugador:jugadores(id, apodo)'
+
+export async function getMiCuenta() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+  const { data, error } = await nx.from('cuentas').select(CUENTA_SELECT).eq('user_id', user.id).maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function registrarseConCodigo(codigo) {
+  const { data, error } = await nx.rpc('nx_registrarse', { p_codigo: codigo })
+  if (error) throw error
+  return data
+}
+
+export async function crearInvitacion() {
+  const { data, error } = await nx.rpc('nx_crear_invitacion')
+  if (error) throw error
+  return data
+}
+
+export async function getCuentas() {
+  const { data, error } = await nx.from('cuentas').select(CUENTA_SELECT).order('created_at', { ascending: true })
+  if (error) throw error
+  return data
+}
+
+export async function aceptarCuenta({ userId, jugadorId = null, apodo = null }) {
+  const { data, error } = await nx.rpc('nx_aceptar_cuenta', { p_user_id: userId, p_jugador_id: jugadorId, p_apodo: apodo })
+  if (error) throw error
+  return data
+}
+
+export async function bloquearCuenta(userId, motivo) {
+  const { data, error } = await nx.rpc('nx_bloquear_cuenta', { p_user_id: userId, p_motivo: motivo })
+  if (error) throw error
+  return data
+}

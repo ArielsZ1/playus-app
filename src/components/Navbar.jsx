@@ -35,6 +35,9 @@ export default function Navbar({ temporadas, temporadaId, onChangeTemporada, ses
           <a href="/museo/" className={`${navItem} ${navItemInactive}`}>
             Museo
           </a>
+          <a href="/nexplay/" className={`${navItem} ${navItemInactive}`}>
+            NEXPLAY
+          </a>
           <NavLink to="/admin" className={({ isActive }) => `${navItem} ${isActive ? navItemActive : navItemInactive}`}>
             Cargar datos
           </NavLink>

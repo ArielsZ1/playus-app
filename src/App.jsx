@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
 import Intro, { introPendiente } from './components/Intro.jsx'
-import { getTemporadas } from './lib/queries.js'
+import { getTemporadas, getMiCuenta } from './lib/queries.js'
 import { supabase } from './lib/supabaseClient.js'
 import { useNavigate } from 'react-router-dom'
 
@@ -25,6 +25,21 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState(null)
   const [session, setSession] = useState(null)
+  // null = verificando; misma regla que public.es_admin() en la base
+  const [esAdmin, setEsAdmin] = useState(null)
+  const [cuentaError, setCuentaError] = useState(null)
+  const userId = session?.user?.id
+
+  useEffect(() => {
+    setEsAdmin(null)
+    setCuentaError(null)
+    if (!userId) return
+    let vigente = true
+    getMiCuenta()
+      .then((c) => vigente && setEsAdmin(Boolean(c?.es_admin && c.estado === 'aceptado')))
+      .catch((err) => vigente && setCuentaError(err.message))
+    return () => { vigente = false }
+  }, [userId])
 
   const noTemporada = (
     <div className="gem-panel px-6 py-8 text-center text-muted">
@@ -80,7 +95,26 @@ export default function App() {
               <Route
                 path="/admin"
                 element={
-                  session ? (
+                  !session ? (
+                    <Login />
+                  ) : cuentaError ? (
+                    <div className="gem-panel-sm bg-ruby/10 [--edge:#D14E5A] text-[#F07A84] px-4 py-3">
+                      No se pudo verificar la cuenta: {cuentaError}
+                    </div>
+                  ) : esAdmin === null ? (
+                    <p className="text-muted">Verificando cuenta…</p>
+                  ) : !esAdmin ? (
+                    <div className="gem-panel px-6 py-8 text-center">
+                      <p className="text-ink">Esta cuenta no es admin.</p>
+                      <button
+                        type="button"
+                        onClick={() => supabase.auth.signOut()}
+                        className="mt-4 px-4 py-2 rounded-md border border-muted/40 text-muted hover:text-ink"
+                      >
+                        Salir
+                      </button>
+                    </div>
+                  ) : (
                     <Admin
                       temporadaId={temporadaId}
                       temporadas={temporadas}
@@ -89,8 +123,6 @@ export default function App() {
                         setTemporadaId(nueva.id)
                       }}
                     />
-                  ) : (
-                    <Login />
                   )
                 }
               />
