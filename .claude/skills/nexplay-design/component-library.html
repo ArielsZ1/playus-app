@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/lucide-static@0.454.0/font/lucide.css">
+<title>NEXPLAY · Componentes</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --n0: #FFFFFF; --n50: #F7F5FF; --n100: #F1EDFF; --n200: #D9D3F2; --n300: #B3ABD6; --n400: #8C84B3;
+  --n500: #6A6296; --n600: #4A3F82; --n700: #3A3168; --n800: #2E2560; --n900: #251D4D; --n925: #1E1840; --n950: #14102A;
+  --b50: #FDF7E8; --b100: #FAEBC7; --b200: #F5D995; --b300: #F2CF7F; --b400: #EDC163; --b500: #E8B54D;
+  --b600: #CC9632; --b700: #A47524; --b800: #7A561C; --b900: #523A15; --b950: #2B2018;
+  --red50: #FDEEEF; --red500: #E8636F; --red900: #4A1C26;
+  --green50: #ECF8F2; --green500: #3FAE7A; --green900: #12352A;
+  --amber50: #FEF4EA; --amber500: #F2994A; --amber900: #4A2A12;
+  --blue50: #EEF3FE; --blue500: #4E7FE8; --blue900: #172A55;
+  --font-display: "Unbounded", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --text-display: 32px; --text-score: 56px; --text-heading: 22px; --text-subheading: 16px;
+  --text-body: 15px; --text-body-sm: 13px; --text-caption: 12px; --text-label: 11px;
+  --space-2xs: 2px; --space-xs: 4px; --space-sm: 8px; --space-md: 16px; --space-lg: 24px;
+  --space-xl: 32px; --space-2xl: 48px; --space-3xl: 64px; --space-4xl: 96px;
+  --radius-component: 0px; --radius-pill: 999px; --cut-sm: 8px; --cut-lg: 14px;
+  --ease-fast: cubic-bezier(0.2, 0.8, 0.2, 1); --ease-medium: cubic-bezier(0.34, 1.56, 0.64, 1); --ease-slow: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 140ms; --duration-medium: 320ms; --duration-slow: 450ms;
+}
+[data-theme="dark"] {
+  --background: var(--n950); --bg: var(--background); --surface1: var(--n925); --surface2: var(--n900); --surface3: var(--n800);
+  --border: var(--n700); --border-visible: var(--n600);
+  --text1: var(--n100); --text2: var(--n300); --text3: var(--n400); --text4: var(--n500);
+  --accent: var(--b500); --accent-hover: var(--b400); --accent-subtle: var(--b950); --on-accent: var(--n950);
+  --live: var(--blue500); --live-bg: var(--blue900);
+  --success: var(--green500); --success-bg: var(--green900);
+  --warning: var(--amber500); --warning-bg: var(--amber900);
+  --error: var(--red500); --error-bg: var(--red900);
+  --shadow-2: 0 12px 32px rgba(8, 6, 20, 0.55); --shadow-3: 0 24px 64px rgba(8, 6, 20, 0.70);
+  --glow-live: drop-shadow(0 0 14px rgba(78, 127, 232, 0.45)); --glow-gold: drop-shadow(0 0 16px rgba(232, 181, 77, 0.45));
+  --halo-a: rgba(78, 127, 232, 0.10); --halo-b: rgba(232, 181, 77, 0.08); --backdrop: rgba(8, 6, 20, 0.72);
+}
+[data-theme="light"] {
+  --background: var(--n50); --bg: var(--background); --surface1: var(--n0); --surface2: var(--n100); --surface3: var(--n200);
+  --border: var(--n200); --border-visible: var(--n300);
+  --text1: var(--n950); --text2: var(--n600); --text3: var(--n500); --text4: var(--n400);
+  --accent: var(--b700); --accent-hover: var(--b600); --accent-subtle: var(--b50); --on-accent: var(--n0);
+  --live: var(--blue500); --live-bg: var(--blue50);
+  --success: var(--green500); --success-bg: var(--green50);
+  --warning: var(--amber500); --warning-bg: var(--amber50);
+  --error: var(--red500); --error-bg: var(--red50);
+  --shadow-2: 0 12px 32px rgba(20, 16, 42, 0.12); --shadow-3: 0 24px 64px rgba(20, 16, 42, 0.18);
+  --glow-live: drop-shadow(0 0 12px rgba(78, 127, 232, 0.30)); --glow-gold: drop-shadow(0 0 12px rgba(164, 117, 36, 0.30));
+  --halo-a: rgba(78, 127, 232, 0.08); --halo-b: rgba(164, 117, 36, 0.06); --backdrop: rgba(20, 16, 42, 0.40);
+}
+html, body {
+  background-color: var(--background); color: var(--text1);
+  font-family: var(--font-body); font-size: var(--text-body); line-height: 1.5;
+  -webkit-font-smoothing: antialiased; transition: background-color 400ms ease, color 400ms ease;
+}
+body {
+  min-height: 100vh;
+  background-image: radial-gradient(circle at 15% 10%, var(--halo-a), transparent 40%), radial-gradient(circle at 85% 0%, var(--halo-b), transparent 35%);
+  background-attachment: fixed;
+}
+/* The Playus gem cut: clip two opposite corners, redraw the diagonal edge */
+.gem, .gem-sm {
+  --cut: var(--cut-lg); --edge: var(--border); --fill: var(--surface1);
+  clip-path: polygon(0 var(--cut), var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%);
+  border: 1px solid var(--edge);
+  background:
+    linear-gradient(to bottom right, transparent calc(50% - 1px), var(--edge) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) left top / var(--cut) var(--cut) no-repeat border-box,
+    linear-gradient(to bottom right, transparent calc(50% - 1px), var(--edge) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) right bottom / var(--cut) var(--cut) no-repeat border-box,
+    var(--fill);
+}
+.gem-sm { --cut: var(--cut-sm); --fill: var(--surface2); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* clip-path also clips outline: gem-cut elements draw focus as an inset ring */
+.gem:focus-visible, .gem-sm:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
+.floating-bar {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 100;
+  display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px;
+  background: var(--surface1); border: 1.5px solid var(--border); box-shadow: 0px 8px 32px rgba(0, 0, 0, 0.12);
+  transition: background 500ms ease, border-color 500ms ease;
+}
+.mode-btn {
+  height: 32px; border-radius: 999px; border: none; background: transparent; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; padding: 0 14px;
+  font-family: var(--font-body, sans-serif); font-size: 12px; font-weight: 500; color: var(--text3);
+  transition: background 200ms ease, color 200ms ease; outline: none;
+}
+.mode-btn:hover { color: var(--text1); }
+.mode-btn.active { background: var(--surface3); color: var(--text1); }
+.mode-btn i { font-size: 14px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition-duration: 120ms !important; }
+}
+
+body { background-image: none; }
+.cl-shell { display: flex; min-height: 100vh; }
+.cl-toc { width: 240px; flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 40px 24px; border-right: 1px solid var(--border); }
+.cl-toc h1 { font-family: var(--font-display); font-weight: 900; font-size: 20px; letter-spacing: .02em; margin-bottom: 6px; }
+.cl-toc h1 span { color: var(--accent); }
+.cl-toc .sub { font-size: var(--text-caption); color: var(--text3); margin-bottom: 20px; }
+.cl-toc nav { display: flex; flex-direction: column; gap: 2px; }
+.cl-toc-category { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); padding: 14px 0 4px; cursor: pointer; user-select: none; }
+.cl-toc-category.active { color: var(--accent); }
+.cl-toc-sub { font-size: 13px; color: var(--text2); text-decoration: none; padding: 3px 0 3px 12px; display: block; transition: color 200ms; }
+.cl-toc-sub:hover, .cl-toc-sub.active { color: var(--text1); }
+.cl-main { flex: 1; padding: 48px 48px 140px; max-width: 1000px; min-width: 0; }
+.cl-category-panel { display: none; }
+.cl-category-panel.active { display: block; }
+.cl-component-group { margin-bottom: 64px; scroll-margin-top: 48px; }
+.cl-component-group h3 { font-family: var(--font-display); font-weight: 700; font-size: 26px; margin-bottom: 6px; }
+.cl-component-group > p { font-size: 14px; color: var(--text2); margin-bottom: 20px; max-width: 70ch; }
+.cl-canvas { background: var(--surface1); border: 1px solid var(--border); border-radius: var(--radius-component); padding: 40px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; }
+.cl-canvas.col { flex-direction: column; gap: 20px; }
+.cl-canvas.dark { background: var(--background); }
+.cl-variant { display: flex; flex-direction: column; gap: 12px; }
+.cl-variant-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); }
+.cl-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+.cl-spec-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cl-spec-table th, .cl-spec-table td { text-align: left; padding: 10px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+.cl-spec-table th { font-weight: 500; color: var(--text3); text-transform: uppercase; font-size: 10px; letter-spacing: 0.08em; }
+.cl-spec-table td { color: var(--text2); padding-right: 16px; }
+.cl-spec-table .col-value { color: var(--text1); font-size: 12px; }
+.mono { font-family: var(--font-mono); }
+.num { font-variant-numeric: tabular-nums; }
+.label { font-size: var(--text-label); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text2); }
+.caption { font-size: var(--text-caption); color: var(--text3); }
+.cut { clip-path: polygon(0 var(--cut), var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%); }
+
+/* foundations */
+.ramp { display: grid; grid-template-columns: repeat(13, 1fr); gap: 4px; width: 100%; }
+.ramp.short { grid-template-columns: repeat(11, 1fr); }
+.rs { height: 48px; border: 1px solid var(--border); }
+.rs-cap { font-size: 10px; color: var(--text3); text-align: center; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.sem-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; }
+.sem { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text2); }
+.sem span { width: 28px; height: 28px; border: 1px solid var(--border-visible); flex-shrink: 0; }
+.ts-row { display: flex; align-items: baseline; gap: 24px; width: 100%; border-bottom: 1px solid var(--border); padding-bottom: 14px; }
+.ts-row:last-child { border-bottom: none; }
+.ts-tag { width: 110px; flex-shrink: 0; font-size: 11px; color: var(--text3); font-family: var(--font-mono); }
+.t-display { font-family: var(--font-display); font-size: var(--text-display); font-weight: 700; line-height: 1.1; letter-spacing: -0.01em; }
+.t-score { font-family: var(--font-display); font-size: var(--text-score); font-weight: 900; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.t-heading { font-family: var(--font-display); font-size: var(--text-heading); font-weight: 700; line-height: 1.2; }
+.t-subheading { font-family: var(--font-display); font-size: var(--text-subheading); font-weight: 500; line-height: 1.3; }
+.t-body { font-size: var(--text-body); line-height: 1.5; }
+.t-body-sm { font-size: var(--text-body-sm); line-height: 1.45; color: var(--text2); }
+.t-caption { font-size: var(--text-caption); font-weight: 500; color: var(--text3); }
+.t-mono { font-family: var(--font-mono); font-size: 13px; font-weight: 500; letter-spacing: .12em; }
+.shape { width: 96px; height: 72px; display: grid; place-items: center; font-size: 11px; color: var(--text2); text-align: center; }
+.shape.cut0 { --fill: var(--surface3); border: 1px solid var(--border-visible); background: var(--surface3); }
+.shape.pill { border-radius: var(--radius-pill); width: 72px; background: var(--surface3); border: 1px solid var(--border-visible); }
+.elev { width: 160px; height: 96px; display: grid; place-items: center; font-size: 12px; color: var(--text2); background: var(--surface1); border: 1px solid var(--border); }
+.elev.e2 { box-shadow: var(--shadow-2); }
+.elev.e3 { box-shadow: var(--shadow-3); }
+.glow-live-demo { filter: var(--glow-live); }
+.glow-gold-demo { filter: var(--glow-gold); }
+.elev-gem { width: 160px; height: 96px; display: grid; place-items: center; font-size: 12px; color: var(--text2); }
+.sp-row { display: flex; align-items: center; gap: 16px; width: 100%; }
+.sp-name { width: 90px; font-family: var(--font-mono); font-size: 11px; color: var(--text3); }
+.sp-bar { height: 12px; background: var(--accent-subtle); border: 1px solid var(--accent); }
+.ico-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; width: 100%; }
+.ico { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 10px; color: var(--text3); }
+.ico i { font-size: 24px; color: var(--text1); }
+.ico-sizes { display: flex; gap: 24px; align-items: flex-end; color: var(--text1); }
+
+/* buttons */
+.btn { --cut: var(--cut-sm); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--font-body); font-weight: 600; font-size: var(--text-body); height: 48px; padding: 0 24px;
+  transition: transform var(--duration-medium) var(--ease-medium), background-color var(--duration-fast) var(--ease-fast), color var(--duration-fast) var(--ease-fast); }
+.btn:active, .btn.is-pressed { transform: translateY(2px) scale(.98); transition-duration: var(--duration-fast); }
+.btn-primary { border: none; height: 56px; background: var(--accent); color: var(--on-accent); font-family: var(--font-display); font-weight: 700; font-size: var(--text-subheading); letter-spacing: .04em; text-transform: uppercase; }
+.btn-primary:hover, .btn-primary.is-hover, .btn-primary.is-pressed { background: var(--accent-hover); }
+.btn-secondary { --edge: var(--border-visible); --fill: var(--surface2); color: var(--text1); }
+.btn-secondary:hover, .btn-secondary.is-hover { --fill: var(--surface3); }
+.btn-ghost { border: none; background: transparent; height: 40px; padding: 0 16px; color: var(--text2); }
+.btn-ghost:hover, .btn-ghost.is-hover { color: var(--text1); }
+.btn-danger { --edge: var(--error); --fill: var(--error-bg); color: var(--error); }
+.btn-sm { height: 40px; padding: 0 16px; font-size: var(--text-body-sm); }
+.btn-primary.btn-sm { font-size: 13px; }
+.is-focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cut:focus-visible, .cut.is-focus, .gem.is-focus, .gem-sm.is-focus { outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
+.btn-primary.is-focus, .btn-primary:focus-visible, .ibtn.primary.is-focus { box-shadow: inset 0 0 0 2px var(--on-accent); }
+.is-disabled { opacity: .4; pointer-events: none; }
+.btn i { font-size: 20px; }
+.btn-sm i { font-size: 16px; }
+.ibtn { --cut: var(--cut-sm); width: 48px; height: 48px; display: inline-grid; place-items: center; cursor: pointer; color: var(--text1); font-size: 20px; }
+.ibtn.primary, .ibtn.ghost { border: none; }
+.ibtn.ghost { background: transparent; }
+.ibtn.primary { background: var(--accent); color: var(--on-accent); }
+.ibtn.secondary { --edge: var(--border-visible); --fill: var(--surface2); }
+.ibtn.ghost { color: var(--text2); }
+.ibtn.small { width: 40px; height: 40px; font-size: 16px; }
+.ibtn.large { width: 56px; height: 56px; font-size: 24px; }
+.tbtn { --cut: var(--cut-sm); height: 40px; padding: 0 14px; display: inline-flex; align-items: center; gap: 8px; --edge: var(--border-visible); --fill: var(--surface2); color: var(--text2); font-family: var(--font-body); font-weight: 600; font-size: var(--text-body-sm); cursor: pointer; }
+.tbtn.on { --edge: var(--accent); --fill: var(--accent-subtle); color: var(--accent); }
+.seg-ctl { display: inline-flex; padding: 4px; gap: 4px; background: var(--surface3); }
+.seg-opt { --cut: 6px; height: 36px; padding: 0 14px; border: none; background: transparent; color: var(--text2); font-family: var(--font-body); font-weight: 600; font-size: var(--text-body-sm); cursor: pointer; }
+.seg-opt.sel { background: var(--surface1); color: var(--text1); }
+.seg-opt.is-hover { color: var(--text1); }
+.menu-wrap { filter: drop-shadow(0 12px 24px rgba(8, 6, 20, .45)); }
+.menu { --edge: var(--border-visible); width: 240px; padding: 6px; }
+.mi { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px; font-size: var(--text-body-sm); color: var(--text1); }
+.mi i { font-size: 16px; color: var(--text3); }
+.mi.is-hover { background: var(--surface2); }
+.mi.checked .tick { margin-left: auto; color: var(--accent); }
+.mi.danger { color: var(--error); }
+.mi.danger i { color: var(--error); }
+.mi-sep { height: 1px; background: var(--border); margin: 6px 0; }
+.mi .chev { margin-left: auto; }
+
+/* inputs */
+.in-wrap { display: flex; flex-direction: column; gap: 8px; width: 260px; }
+.in { --cut: var(--cut-sm); --edge: var(--border-visible); --fill: var(--surface3); height: 48px; padding: 0 16px; display: flex; align-items: center; gap: 10px; color: var(--text1); font-size: var(--text-body); position: relative; }
+.in .ph { color: var(--text3); }
+.in i { color: var(--text3); font-size: 18px; }
+.in .clear { margin-left: auto; }
+.in.is-hover { --edge: var(--text3); }
+.in.is-focus { --edge: var(--accent); }
+.in.is-error { --edge: var(--error); }
+.in.is-success { --edge: var(--success); }
+.in.readonly { --fill: var(--surface2); color: var(--text2); }
+.in.code { justify-content: center; font-family: var(--font-mono); font-weight: 500; letter-spacing: .12em; font-size: 17px; }
+.in-help { font-size: var(--text-caption); color: var(--text3); }
+.in-help.err { color: var(--error); }
+.in-help.ok { color: var(--success); }
+.ta { --cut: var(--cut-sm); --edge: var(--border-visible); --fill: var(--surface3); min-height: 100px; padding: 12px; font-size: var(--text-body); color: var(--text1); line-height: 1.5; width: 320px; }
+.ta.is-focus { --edge: var(--accent); }
+.ta.is-error { --edge: var(--error); }
+.ta-count { font-size: var(--text-caption); color: var(--text3); text-align: right; }
+.sel-trigger .chev { margin-left: auto; transition: transform var(--duration-medium) var(--ease-medium); }
+.sel-trigger.open .chev { transform: rotate(180deg); }
+.chk-row { display: flex; align-items: center; gap: 12px; font-size: var(--text-body); }
+.cb { --cut: 4px; width: 20px; height: 20px; border: 1.5px solid var(--border-visible); position: relative; flex-shrink: 0; }
+.cb.is-hover { border-color: var(--text2); }
+.cb.checked, .cb.indet { background: var(--accent); border-color: var(--accent); }
+.cb.checked::after { content: ""; position: absolute; left: 5px; top: 4px; width: 8px; height: 4px; border-left: 2px solid var(--on-accent); border-bottom: 2px solid var(--on-accent); transform: rotate(-45deg); }
+.cb.indet::after { content: ""; position: absolute; left: 4px; top: 8px; width: 9px; height: 2px; background: var(--on-accent); }
+.rd { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border-visible); position: relative; flex-shrink: 0; }
+.rd.on { border-color: var(--accent); }
+.rd.on::after { content: ""; position: absolute; inset: 3.5px; border-radius: 50%; background: var(--accent); }
+.rd.is-hover { border-color: var(--text2); }
+.sw { --cut: var(--cut-sm); width: 48px; height: 28px; background: var(--surface3); position: relative; flex-shrink: 0; }
+.sw::after { content: ""; position: absolute; top: 4px; left: 4px; width: 20px; height: 20px; background: var(--text3); clip-path: polygon(0 4px, 4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%); transition: transform var(--duration-medium) var(--ease-medium); }
+.sw.on { background: var(--accent); }
+.sw.on::after { transform: translateX(20px); background: var(--on-accent); }
+.sw-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 300px; font-size: var(--text-body); }
+.sl { width: 300px; height: 4px; background: var(--surface3); border-radius: 999px; position: relative; margin: 28px 0 8px; }
+.sl-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 999px; }
+.sl-thumb { position: absolute; top: 50%; width: 18px; height: 18px; background: var(--accent); border: 2px solid var(--background); transform: translate(-50%, -50%) rotate(45deg); }
+.sl-thumb.is-active { transform: translate(-50%, -50%) rotate(45deg) scale(1.2); filter: var(--glow-gold); }
+.sl-val { position: absolute; top: -30px; transform: translateX(-50%); font-family: var(--font-display); font-weight: 700; font-size: var(--text-subheading); font-variant-numeric: tabular-nums; }
+.cal { width: 292px; padding: 16px; }
+.cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 600; font-size: var(--text-body-sm); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 36px); gap: 2px; }
+.dow { font-size: 10px; color: var(--text3); text-align: center; height: 24px; }
+.day { --cut: 4px; height: 36px; display: grid; place-items: center; font-size: var(--text-body-sm); font-variant-numeric: tabular-nums; color: var(--text1); background: transparent; }
+.day.out { color: var(--text4); }
+.day.today { box-shadow: inset 0 0 0 1px var(--border-visible); }
+.day.inrange { background: var(--surface3); }
+.day.picked { background: var(--accent); color: var(--on-accent); font-weight: 700; }
+.combo-list { --edge: var(--border-visible); width: 260px; padding: 6px; margin-top: 6px; }
+.combo-list .mi b { color: var(--accent); font-weight: 600; }
+.combo-empty { padding: 12px; font-size: var(--text-body-sm); color: var(--text3); }
+
+/* data display */
+.card { width: 260px; padding: 24px; display: flex; flex-direction: column; gap: 8px; }
+.card h4 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-subheading); }
+.card p { font-size: var(--text-body-sm); color: var(--text2); }
+.card.interactive.is-hover { --edge: var(--border-visible); }
+.card.selected { --edge: var(--accent); }
+.card-media { height: 96px; margin: -24px -24px 8px; background: linear-gradient(135deg, var(--surface3), var(--surface2)); display: grid; place-items: center; font-size: 32px; color: var(--accent); }
+.av { border-radius: 50%; background: var(--surface3); border: 1px solid var(--border-visible); display: grid; place-items: center; font-weight: 600; color: var(--text1); position: relative; flex-shrink: 0; }
+.av.s { width: 24px; height: 24px; font-size: 10px; }
+.av.m { width: 32px; height: 32px; font-size: var(--text-body-sm); }
+.av.l { width: 48px; height: 48px; font-size: var(--text-body); }
+.av i { font-size: 16px; color: var(--text2); }
+.av .st { position: absolute; right: -1px; bottom: -1px; width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--surface1); }
+.st.live { background: var(--live); }
+.st.away { background: var(--warning); }
+.st.off { background: var(--text3); }
+.av-group { display: flex; }
+.av-group .av { margin-left: -8px; border: 2px solid var(--surface1); }
+.av-group .av:first-child { margin-left: 0; }
+.badge { --cut: 4px; display: inline-flex; align-items: center; justify-content: center; height: 20px; min-width: 20px; padding: 0 6px; line-height: 1; font-size: var(--text-caption); font-weight: 700; font-variant-numeric: tabular-nums; }
+.badge.neutral { background: var(--surface3); color: var(--text2); }
+.badge.ok { background: var(--success-bg); color: var(--success); }
+.badge.warn { background: var(--warning-bg); color: var(--warning); }
+.badge.err { background: var(--error-bg); color: var(--error); }
+.badge.info { background: var(--live-bg); color: var(--live); }
+.badge-host { position: relative; display: inline-flex; }
+.badge-host .badge { position: absolute; top: 0; right: 0; transform: translate(40%, -40%); }
+.sdot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.chip { --cut: var(--cut-sm); display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; line-height: 1; font-size: var(--text-caption); font-weight: 600; white-space: nowrap; background: var(--surface2); color: var(--text2); }
+.chip i { font-size: 14px; }
+.chip.live { background: var(--live-bg); color: var(--live); }
+.chip.gold { background: var(--accent-subtle); color: var(--accent); }
+.chip.ok { background: var(--success-bg); color: var(--success); }
+.chip.warn { background: var(--warning-bg); color: var(--warning); }
+.chip.err { background: var(--error-bg); color: var(--error); }
+.chip.sel { background: var(--accent-subtle); color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.chip.is-hover { color: var(--text1); }
+.pulse { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+table.dt { width: 100%; border-collapse: collapse; }
+.dt th { text-align: left; font-size: var(--text-caption); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text2); height: 32px; padding: 0 12px; border-bottom: 1px solid var(--border); }
+.dt td { height: 48px; padding: 0 12px; border-bottom: 1px solid var(--border); font-size: var(--text-body); }
+.dt .r { text-align: right; }
+.dt .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+.dt tr.mine td { background: var(--surface2); }
+.dt tr.mine td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
+.dt tr.is-hover td { background: var(--surface2); }
+.dt tr.flash td { background: var(--surface3); }
+.dt .first { color: var(--accent); font-weight: 700; }
+.dots { display: inline-flex; gap: 4px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--border-visible); }
+.dot.used { background: var(--text2); border-color: var(--text2); }
+.dot.now { background: var(--live); border-color: var(--live); animation: pulse 2s ease-in-out infinite; }
+.dot.extra { border-color: var(--live); }
+.loading-line { display: flex; align-items: center; gap: 10px; font-size: var(--text-body-sm); color: var(--text3); }
+
+/* navigation */
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); width: 100%; }
+.tab { height: 48px; padding: 0 16px; border: none; background: transparent; color: var(--text3); font-family: var(--font-body); font-weight: 600; font-size: var(--text-body-sm); position: relative; cursor: pointer; }
+.tab.active { color: var(--text1); }
+.tab.active::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--accent); }
+.tab.is-hover { color: var(--text2); }
+.crumbs { display: flex; align-items: center; gap: 6px; font-size: var(--text-body-sm); }
+.crumbs a { color: var(--text2); text-decoration: none; }
+.crumbs a:hover, .crumbs a.is-hover { color: var(--text1); text-decoration: underline; }
+.crumbs i { font-size: 12px; color: var(--text3); }
+.crumbs .cur { color: var(--text1); font-weight: 600; }
+.pager { display: flex; gap: 4px; }
+.pg { --cut: 6px; min-width: 40px; height: 40px; border: none; background: transparent; color: var(--text2); font-family: var(--font-body); font-weight: 600; font-size: var(--text-body-sm); display: grid; place-items: center; cursor: pointer; font-variant-numeric: tabular-nums; }
+.pg.cur { background: var(--accent); color: var(--on-accent); }
+.pg.is-hover { background: var(--surface2); color: var(--text1); }
+.tabbar { width: 360px; height: 64px; background: var(--surface1); border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(4, 1fr); }
+.tb { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: var(--text-caption); color: var(--text3); text-decoration: none; position: relative; }
+.tb i { font-size: 22px; }
+.tb.active { color: var(--accent); }
+.tb.active::before { content: ""; position: absolute; top: -1px; left: 28%; right: 28%; height: 2px; background: var(--accent); }
+.tb.is-hover { color: var(--text1); }
+.lnk { color: var(--text1); text-decoration: underline; text-decoration-color: var(--border-visible); text-underline-offset: 3px; }
+.lnk.is-hover { text-decoration-color: var(--accent); }
+.lnk.visited { color: var(--text2); }
+.lnk-solo { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); text-decoration: none; font-weight: 600; font-size: var(--text-body-sm); }
+
+/* feedback */
+.alert { --cut: var(--cut-sm); display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; width: 100%; max-width: 560px; }
+.alert > i { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.alert b { display: block; font-size: var(--text-body-sm); font-weight: 600; color: var(--text1); }
+.alert span { font-size: var(--text-body-sm); color: var(--text2); }
+.alert .x { margin-left: auto; color: var(--text3); }
+.alert.info { --edge: var(--live); --fill: var(--live-bg); }
+.alert.info > i { color: var(--live); }
+.alert.ok { --edge: var(--success); --fill: var(--success-bg); }
+.alert.ok > i { color: var(--success); }
+.alert.warn { --edge: var(--warning); --fill: var(--warning-bg); }
+.alert.warn > i { color: var(--warning); }
+.alert.err { --edge: var(--error); --fill: var(--error-bg); }
+.alert.err > i { color: var(--error); }
+.toast-wrap { filter: drop-shadow(0 12px 24px rgba(8, 6, 20, .45)); }
+.toast { --fill: var(--surface3); display: flex; align-items: center; gap: 10px; padding: 12px 16px; width: 320px; font-size: var(--text-body-sm); }
+.toast i { font-size: 18px; }
+.toast .act { margin-left: auto; color: var(--accent); font-weight: 600; }
+.t-ok i { color: var(--success); }
+.t-warn i { color: var(--warning); }
+.t-err i { color: var(--error); }
+.t-neutral i { color: var(--text2); }
+.pbar { width: 320px; }
+.pbar-top { display: flex; justify-content: space-between; font-size: var(--text-caption); color: var(--text2); margin-bottom: 8px; }
+.ptrack { height: 6px; background: var(--surface3); border-radius: 999px; overflow: hidden; }
+.pfill { height: 100%; border-radius: 999px; background: var(--accent); }
+.pfill.ok { background: var(--success); }
+.pfill.warn { background: var(--warning); }
+.pfill.err { background: var(--error); }
+.psegs { display: grid; grid-template-columns: repeat(21, 1fr); gap: 2px; width: 420px; }
+.psegs span { height: 10px; background: var(--surface3); }
+.psegs .done { background: var(--success); }
+.psegs .open { background: var(--live); }
+.psegs .cancel { background: var(--error); opacity: .5; }
+.ring { width: 64px; height: 64px; }
+.spin { display: inline-block; border: 2px solid var(--accent); transform: rotate(45deg); animation: spin 900ms linear infinite; }
+.spin.s { width: 11px; height: 11px; }
+.spin.m { width: 17px; height: 17px; }
+.spin.l { width: 23px; height: 23px; }
+@keyframes spin { to { transform: rotate(405deg); } }
+.empty { width: 100%; text-align: center; padding: 48px 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.empty-ico { width: 72px; height: 72px; display: grid; place-items: center; font-size: 36px; color: var(--text3); margin-bottom: 8px; }
+.empty h4 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-subheading); color: var(--text2); }
+.empty p { color: var(--text3); max-width: 36ch; }
+.empty .btn { margin-top: 14px; }
+
+/* overlays */
+.backdrop { width: 100%; padding: 40px; background: var(--backdrop); display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; align-items: flex-end; }
+.modal-wrap { filter: drop-shadow(0 24px 48px rgba(8, 6, 20, .55)); }
+.modal { --edge: var(--border-visible); width: 360px; padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+.modal-head { display: flex; justify-content: space-between; align-items: flex-start; }
+.modal h4 { font-family: var(--font-display); font-weight: 700; font-size: 18px; }
+.modal p { font-size: var(--text-body-sm); color: var(--text2); }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+.sheet { --edge: var(--border-visible); width: 340px; padding: 12px 20px 24px; clip-path: polygon(0 var(--cut-lg), var(--cut-lg) 0, 100% 0, 100% 100%, 0 100%); }
+.handle { width: 32px; height: 4px; border-radius: 999px; background: var(--border-visible); margin: 0 auto 16px; }
+.pop-wrap { filter: drop-shadow(0 12px 24px rgba(8, 6, 20, .45)); position: relative; }
+.pop { --edge: var(--border-visible); width: 260px; padding: 16px; font-size: var(--text-body-sm); color: var(--text2); }
+.pop b { display: block; color: var(--text1); margin-bottom: 4px; }
+.pop-arrow { width: 12px; height: 12px; background: var(--border-visible); clip-path: polygon(50% 0, 100% 100%, 0 100%); margin: 0 0 -1px 24px; }
+.tip { --cut: 4px; background: var(--surface3); color: var(--text1); font-size: var(--text-caption); padding: 6px 10px; display: inline-block; max-width: 240px; }
+.tip-host { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.acc { width: 100%; max-width: 560px; padding: 0; }
+.acc-item { border-bottom: 1px solid var(--border); }
+.acc-item:last-child { border-bottom: none; }
+.acc-h { display: flex; align-items: center; height: 48px; padding: 0 16px; font-weight: 600; font-size: var(--text-body); }
+.acc-h i { margin-left: auto; color: var(--text3); font-size: 16px; transition: transform var(--duration-medium) var(--ease-medium); }
+.acc-item.open .acc-h i { transform: rotate(180deg); }
+.acc-item.is-hover .acc-h { background: var(--surface2); }
+.acc-b { padding: 0 16px 16px; color: var(--text2); font-size: var(--text-body); }
+
+/* nexplay pieces */
+.score-demo { text-align: center; }
+.score-demo .u { font-size: var(--text-caption); color: var(--text2); margin-top: 6px; }
+.score-demo .t-score.gold { color: var(--accent); }
+.livewrap { filter: var(--glow-live); }
+.livepanel { --edge: var(--live); width: 340px; padding: 20px; }
+.livepanel .top { display: flex; justify-content: space-between; align-items: center; }
+.livepanel .t-heading { margin: 14px 0; }
+.livepanel .row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px; }
+.livepanel .btn-primary { width: 100%; }
+.ruleta { width: 160px; height: 160px; }
+.countdown { font-family: var(--font-display); font-weight: 700; font-size: var(--text-heading); font-variant-numeric: tabular-nums; }
+.countdown.last { color: var(--error); }
+
+@media (max-width: 860px) {
+  .cl-shell { flex-direction: column; }
+  .cl-toc { width: 100%; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--border); padding: 24px 16px; }
+  .cl-toc nav { flex-direction: row; flex-wrap: wrap; gap: 4px 12px; }
+  .cl-toc-sub { display: none; }
+  .cl-main { padding: 24px 16px 140px; }
+  .cl-canvas { padding: 20px; }
+  .ramp { grid-template-columns: repeat(7, 1fr); }
+  .ico-grid { grid-template-columns: repeat(6, 1fr); }
+  .sem-grid { grid-template-columns: 1fr 1fr; }
+  .psegs { width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="cl-shell">
+  <aside class="cl-toc">
+    <h1>NEX<span>PLAY</span></h1>
+    <p class="sub">Biblioteca de componentes v1.0</p>
+    <nav>
+      <div class="cl-toc-category active" data-cat="foundations">Fundamentos</div>
+      <a class="cl-toc-sub" href="#colors" data-cat="foundations">Colores</a>
+      <a class="cl-toc-sub" href="#typography" data-cat="foundations">Tipografía</a>
+      <a class="cl-toc-sub" href="#radii" data-cat="foundations">Cortes y radios</a>
+      <a class="cl-toc-sub" href="#elevation" data-cat="foundations">Elevación y brillo</a>
+      <a class="cl-toc-sub" href="#spacing" data-cat="foundations">Espaciado</a>
+      <a class="cl-toc-sub" href="#iconography" data-cat="foundations">Íconos</a>
+      <div class="cl-toc-category" data-cat="actions">Acciones</div>
+      <a class="cl-toc-sub" href="#button" data-cat="actions">Botón</a>
+      <a class="cl-toc-sub" href="#icon-button" data-cat="actions">Botón de ícono</a>
+      <a class="cl-toc-sub" href="#toggle-button" data-cat="actions">Botón alternable</a>
+      <a class="cl-toc-sub" href="#segmented-control" data-cat="actions">Control segmentado</a>
+      <a class="cl-toc-sub" href="#dropdown-menu" data-cat="actions">Menú</a>
+      <div class="cl-toc-category" data-cat="inputs">Entradas</div>
+      <a class="cl-toc-sub" href="#text-input" data-cat="inputs">Campo de texto</a>
+      <a class="cl-toc-sub" href="#textarea" data-cat="inputs">Área de texto</a>
+      <a class="cl-toc-sub" href="#select" data-cat="inputs">Selector</a>
+      <a class="cl-toc-sub" href="#checkbox" data-cat="inputs">Casilla</a>
+      <a class="cl-toc-sub" href="#radio-group" data-cat="inputs">Opciones</a>
+      <a class="cl-toc-sub" href="#switch" data-cat="inputs">Interruptor</a>
+      <a class="cl-toc-sub" href="#slider" data-cat="inputs">Deslizador</a>
+      <a class="cl-toc-sub" href="#date-picker" data-cat="inputs">Calendario</a>
+      <a class="cl-toc-sub" href="#combobox" data-cat="inputs">Buscador</a>
+      <div class="cl-toc-category" data-cat="data-display">Datos</div>
+      <a class="cl-toc-sub" href="#card" data-cat="data-display">Panel</a>
+      <a class="cl-toc-sub" href="#avatar" data-cat="data-display">Avatar</a>
+      <a class="cl-toc-sub" href="#badge" data-cat="data-display">Insignia</a>
+      <a class="cl-toc-sub" href="#tag" data-cat="data-display">Chip</a>
+      <a class="cl-toc-sub" href="#data-table" data-cat="data-display">Tabla</a>
+      <a class="cl-toc-sub" href="#skeleton" data-cat="data-display">Carga</a>
+      <div class="cl-toc-category" data-cat="navigation">Navegación</div>
+      <a class="cl-toc-sub" href="#tabs" data-cat="navigation">Pestañas</a>
+      <a class="cl-toc-sub" href="#breadcrumb" data-cat="navigation">Migas</a>
+      <a class="cl-toc-sub" href="#pagination" data-cat="navigation">Paginación</a>
+      <a class="cl-toc-sub" href="#nav-menu" data-cat="navigation">Barra inferior</a>
+      <a class="cl-toc-sub" href="#link" data-cat="navigation">Enlace</a>
+      <div class="cl-toc-category" data-cat="feedback">Respuesta</div>
+      <a class="cl-toc-sub" href="#alert" data-cat="feedback">Alerta</a>
+      <a class="cl-toc-sub" href="#toast" data-cat="feedback">Aviso</a>
+      <a class="cl-toc-sub" href="#progress" data-cat="feedback">Progreso</a>
+      <a class="cl-toc-sub" href="#spinner" data-cat="feedback">Gema que gira</a>
+      <a class="cl-toc-sub" href="#empty-state" data-cat="feedback">Estado vacío</a>
+      <div class="cl-toc-category" data-cat="overlays">Capas</div>
+      <a class="cl-toc-sub" href="#modal" data-cat="overlays">Modal y hoja</a>
+      <a class="cl-toc-sub" href="#popover" data-cat="overlays">Globo</a>
+      <a class="cl-toc-sub" href="#tooltip" data-cat="overlays">Ayuda</a>
+      <a class="cl-toc-sub" href="#accordion" data-cat="overlays">Acordeón</a>
+      <div class="cl-toc-category" data-cat="nexplay">Piezas NEXPLAY</div>
+      <a class="cl-toc-sub" href="#score" data-cat="nexplay">Puntaje</a>
+      <a class="cl-toc-sub" href="#live-panel" data-cat="nexplay">Panel en vivo</a>
+      <a class="cl-toc-sub" href="#ruleta" data-cat="nexplay">Ruleta</a>
+      <a class="cl-toc-sub" href="#attempts" data-cat="nexplay">Intentos</a>
+      <a class="cl-toc-sub" href="#countdown" data-cat="nexplay">Cuenta regresiva</a>
+    </nav>
+  </aside>
+
+  <main class="cl-main">
+    <!-- ── Fundamentos ── -->
+    <section id="cat-foundations" class="cl-category-panel active">
+      <div id="colors" class="cl-component-group">
+        <h3>Colores</h3>
+        <p>La noche índigo de Playus en 13 pasos, el oro del trofeo y las cuatro gemas como señales. Cada gema tiene un solo significado.</p>
+        <div class="cl-canvas col">
+          <div class="cl-variant" style="width:100%"><span class="cl-variant-label">Neutro (índigo)</span>
+            <div class="ramp">
+              <div><div class="rs" style="background:var(--n0)"></div><div class="rs-cap">0</div></div><div><div class="rs" style="background:var(--n50)"></div><div class="rs-cap">50</div></div><div><div class="rs" style="background:var(--n100)"></div><div class="rs-cap">100</div></div><div><div class="rs" style="background:var(--n200)"></div><div class="rs-cap">200</div></div><div><div class="rs" style="background:var(--n300)"></div><div class="rs-cap">300</div></div><div><div class="rs" style="background:var(--n400)"></div><div class="rs-cap">400</div></div><div><div class="rs" style="background:var(--n500)"></div><div class="rs-cap">500</div></div><div><div class="rs" style="background:var(--n600)"></div><div class="rs-cap">600</div></div><div><div class="rs" style="background:var(--n700)"></div><div class="rs-cap">700</div></div><div><div class="rs" style="background:var(--n800)"></div><div class="rs-cap">800</div></div><div><div class="rs" style="background:var(--n900)"></div><div class="rs-cap">900</div></div><div><div class="rs" style="background:var(--n925)"></div><div class="rs-cap">925</div></div><div><div class="rs" style="background:var(--n950)"></div><div class="rs-cap">950</div></div>
+            </div></div>
+          <div class="cl-variant" style="width:100%"><span class="cl-variant-label">Oro</span>
+            <div class="ramp short">
+              <div><div class="rs" style="background:var(--b50)"></div><div class="rs-cap">50</div></div><div><div class="rs" style="background:var(--b100)"></div><div class="rs-cap">100</div></div><div><div class="rs" style="background:var(--b200)"></div><div class="rs-cap">200</div></div><div><div class="rs" style="background:var(--b300)"></div><div class="rs-cap">300</div></div><div><div class="rs" style="background:var(--b400)"></div><div class="rs-cap">400</div></div><div><div class="rs" style="background:var(--b500)"></div><div class="rs-cap">500</div></div><div><div class="rs" style="background:var(--b600)"></div><div class="rs-cap">600</div></div><div><div class="rs" style="background:var(--b700)"></div><div class="rs-cap">700</div></div><div><div class="rs" style="background:var(--b800)"></div><div class="rs-cap">800</div></div><div><div class="rs" style="background:var(--b900)"></div><div class="rs-cap">900</div></div><div><div class="rs" style="background:var(--b950)"></div><div class="rs-cap">950</div></div>
+            </div></div>
+          <div class="cl-variant" style="width:100%"><span class="cl-variant-label">Semánticos (modo actual)</span>
+            <div class="sem-grid">
+              <div class="sem"><span style="background:var(--background)"></span>--background</div><div class="sem"><span style="background:var(--surface1)"></span>--surface1</div><div class="sem"><span style="background:var(--surface2)"></span>--surface2</div><div class="sem"><span style="background:var(--surface3)"></span>--surface3</div>
+              <div class="sem"><span style="background:var(--border)"></span>--border</div><div class="sem"><span style="background:var(--border-visible)"></span>--border-visible</div><div class="sem"><span style="background:var(--text1)"></span>--text1</div><div class="sem"><span style="background:var(--text2)"></span>--text2</div>
+              <div class="sem"><span style="background:var(--text3)"></span>--text3</div><div class="sem"><span style="background:var(--text4)"></span>--text4</div><div class="sem"><span style="background:var(--accent)"></span>--accent (oro)</div><div class="sem"><span style="background:var(--accent-subtle)"></span>--accent-subtle</div>
+              <div class="sem"><span style="background:var(--live)"></span>--live (zafiro)</div><div class="sem"><span style="background:var(--success)"></span>--success (esmeralda)</div><div class="sem"><span style="background:var(--warning)"></span>--warning (ámbar)</div><div class="sem"><span style="background:var(--error)"></span>--error (rubí)</div>
+            </div></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Token</th><th>Primitivo</th><th>Hex (oscuro)</th><th>Rol</th></tr>
+          <tr><td>--background</td><td>neutral.950</td><td class="col-value mono">#14102A</td><td>Fondo (Playus base)</td></tr>
+          <tr><td>--surface1</td><td>neutral.925</td><td class="col-value mono">#1E1840</td><td>Paneles (gem-panel)</td></tr>
+          <tr><td>--accent</td><td>brand.500</td><td class="col-value mono">#E8B54D</td><td>Jugar, puesto 1, récord</td></tr>
+          <tr><td>--live</td><td>blue.500</td><td class="col-value mono">#4E7FE8</td><td>Solo lo que está en vivo</td></tr>
+          <tr><td>--success / --warning / --error</td><td>green / amber / red .500</td><td class="col-value mono">#3FAE7A / #F2994A / #E8636F</td><td>Válido / revisar / falló</td></tr>
+        </table>
+      </div>
+
+      <div id="typography" class="cl-component-group">
+        <h3>Tipografía</h3>
+        <p>Unbounded para nombres de juego, títulos y puntajes; Inter para todo lo demás; IBM Plex Mono solo para códigos.</p>
+        <div class="cl-canvas col">
+          <div class="ts-row"><span class="ts-tag">--score 56</span><span class="t-score">41</span></div>
+          <div class="ts-row"><span class="ts-tag">--display 32</span><span class="t-display">TOWER STACK</span></div>
+          <div class="ts-row"><span class="ts-tag">--heading 22</span><span class="t-heading">Tabla provisoria</span></div>
+          <div class="ts-row"><span class="ts-tag">--subheading 16</span><span class="t-subheading">Fecha 4 de 12</span></div>
+          <div class="ts-row"><span class="ts-tag">--body 15</span><span class="t-body">Apilá bloques sin que se caigan. Cuenta el mejor de tus intentos.</span></div>
+          <div class="ts-row"><span class="ts-tag">--body-sm 13</span><span class="t-body-sm">Si cerrás la app en medio de un intento, ese intento cuenta igual.</span></div>
+          <div class="ts-row"><span class="ts-tag">--caption 12</span><span class="t-caption">actualizado hace 4 s</span></div>
+          <div class="ts-row"><span class="ts-tag">--label 11</span><span class="label">Tu mejor marca</span></div>
+          <div class="ts-row"><span class="ts-tag">mono 13</span><span class="t-mono">NX7K-Q2P</span></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Token</th><th>Fuente</th><th>Tamaño / peso</th><th>Interlineado</th></tr>
+          <tr><td>--score</td><td>Unbounded</td><td class="col-value">56 / 900</td><td>1</td></tr>
+          <tr><td>--display</td><td>Unbounded</td><td class="col-value">32 / 700</td><td>1.1</td></tr>
+          <tr><td>--heading</td><td>Unbounded</td><td class="col-value">22 / 700</td><td>1.2</td></tr>
+          <tr><td>--subheading</td><td>Unbounded</td><td class="col-value">16 / 500</td><td>1.3</td></tr>
+          <tr><td>--body / --body-sm</td><td>Inter</td><td class="col-value">15 / 400 · 13 / 400</td><td>1.5 · 1.45</td></tr>
+          <tr><td>--caption / --label</td><td>Inter</td><td class="col-value">12 / 500 · 11 / 600 mayúsculas</td><td>1.4 · 1.2</td></tr>
+        </table>
+      </div>
+
+      <div id="radii" class="cl-component-group">
+        <h3>Cortes y radios</h3>
+        <p>La forma sale del corte de gema de Playus, no de redondear. Solo los puntos y los avatares son círculos.</p>
+        <div class="cl-canvas">
+          <div class="cl-variant"><span class="cl-variant-label">Corte 14 · paneles</span><div class="gem shape">gem-panel</div></div>
+          <div class="cl-variant"><span class="cl-variant-label">Corte 8 · controles</span><div class="gem-sm shape">gem-panel-sm</div></div>
+          <div class="cl-variant"><span class="cl-variant-label">Radio 0</span><div class="shape cut0">tablas</div></div>
+          <div class="cl-variant"><span class="cl-variant-label">Radio 999</span><div class="shape pill">puntos</div></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Token</th><th>Valor</th><th>Uso</th></tr>
+          <tr><td>--cut-lg</td><td class="col-value">14px</td><td>Paneles, hojas, modales</td></tr>
+          <tr><td>--cut-sm</td><td class="col-value">8px</td><td>Botones, campos, chips</td></tr>
+          <tr><td>--radius-component</td><td class="col-value">0px</td><td>Todo lo que no es círculo</td></tr>
+          <tr><td>--radius-pill</td><td class="col-value">999px</td><td>Puntos de intento, avatares, pulso en vivo</td></tr>
+        </table>
+      </div>
+
+      <div id="elevation" class="cl-component-group">
+        <h3>Elevación y brillo</h3>
+        <p>Plano por defecto. Las sombras solo en capas flotantes; el brillo es una señal y va en un envoltorio con filter, porque clip-path borra el box-shadow.</p>
+        <div class="cl-canvas dark">
+          <div class="cl-variant"><span class="cl-variant-label">Nivel 1 · plano</span><div class="elev">sin sombra</div></div>
+          <div class="cl-variant"><span class="cl-variant-label">Nivel 2 · menús</span><div class="elev e2">--shadow-2</div></div>
+          <div class="cl-variant"><span class="cl-variant-label">Nivel 3 · modales</span><div class="elev e3">--shadow-3</div></div>
+          <div class="cl-variant"><span class="cl-variant-label">Brillo en vivo</span><div class="glow-live-demo"><div class="gem elev-gem" style="--edge:var(--live)">--glow-live</div></div></div>
+          <div class="cl-variant"><span class="cl-variant-label">Brillo récord</span><div class="glow-gold-demo"><div class="gem elev-gem" style="--edge:var(--accent)">--glow-gold</div></div></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Nivel</th><th>Valor (oscuro)</th><th>Uso</th></tr>
+          <tr><td>2</td><td class="col-value mono">0 12px 32px rgba(8,6,20,.55)</td><td>Menús, globos</td></tr>
+          <tr><td>3</td><td class="col-value mono">0 24px 64px rgba(8,6,20,.70)</td><td>Modales, hojas</td></tr>
+          <tr><td>glow-live</td><td class="col-value mono">drop-shadow(0 0 14px rgba(78,127,232,.45))</td><td>Fecha abierta, intento en curso</td></tr>
+          <tr><td>glow-gold</td><td class="col-value mono">drop-shadow(0 0 16px rgba(232,181,77,.45))</td><td>Récord nuevo, durante 2 s</td></tr>
+        </table>
+      </div>
+
+      <div id="spacing" class="cl-component-group">
+        <h3>Espaciado</h3>
+        <p>Grilla de 8. 16 de margen lateral en el celu, 24 de relleno en los paneles.</p>
+        <div class="cl-canvas col">
+          <div class="sp-row"><span class="sp-name">2xs 2</span><span class="sp-bar" style="width:2px"></span></div>
+          <div class="sp-row"><span class="sp-name">xs 4</span><span class="sp-bar" style="width:4px"></span></div>
+          <div class="sp-row"><span class="sp-name">sm 8</span><span class="sp-bar" style="width:8px"></span></div>
+          <div class="sp-row"><span class="sp-name">md 16</span><span class="sp-bar" style="width:16px"></span></div>
+          <div class="sp-row"><span class="sp-name">lg 24</span><span class="sp-bar" style="width:24px"></span></div>
+          <div class="sp-row"><span class="sp-name">xl 32</span><span class="sp-bar" style="width:32px"></span></div>
+          <div class="sp-row"><span class="sp-name">2xl 48</span><span class="sp-bar" style="width:48px"></span></div>
+          <div class="sp-row"><span class="sp-name">3xl 64</span><span class="sp-bar" style="width:64px"></span></div>
+          <div class="sp-row"><span class="sp-name">4xl 96</span><span class="sp-bar" style="width:96px"></span></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Token</th><th>Valor</th><th>Uso</th></tr>
+          <tr><td>--space-md</td><td class="col-value">16px</td><td>Margen del celu, separación entre paneles</td></tr>
+          <tr><td>--space-lg</td><td class="col-value">24px</td><td>Relleno de gem-panel</td></tr>
+          <tr><td>--space-xl</td><td class="col-value">32px</td><td>Entre secciones de una pantalla</td></tr>
+        </table>
+      </div>
+
+      <div id="iconography" class="cl-component-group">
+        <h3>Íconos</h3>
+        <p>Lucide como reemplazo más parecido a los SVG propios de Playus (trazo 1.75, puntas redondas, geométricos). En la app se dibujan como SVG en línea.</p>
+        <div class="cl-canvas col">
+          <div class="ico-grid">
+            <div class="ico"><i class="icon icon-gem"></i>gem</div><div class="ico"><i class="icon icon-trophy"></i>trophy</div><div class="ico"><i class="icon icon-crown"></i>crown</div><div class="ico"><i class="icon icon-play"></i>play</div>
+            <div class="ico"><i class="icon icon-timer"></i>timer</div><div class="ico"><i class="icon icon-dices"></i>dices</div><div class="ico"><i class="icon icon-swords"></i>swords</div><div class="ico"><i class="icon icon-radio"></i>radio</div>
+            <div class="ico"><i class="icon icon-refresh-cw"></i>refresh</div><div class="ico"><i class="icon icon-users"></i>users</div><div class="ico"><i class="icon icon-star"></i>star</div><div class="ico"><i class="icon icon-log-in"></i>log-in</div>
+          </div>
+          <div class="ico-sizes"><i class="icon icon-gem" style="font-size:16px"></i><i class="icon icon-gem" style="font-size:20px"></i><i class="icon icon-gem" style="font-size:24px"></i><span class="caption">16 · 20 · 24</span></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Kit</td><td class="col-value">Lucide (reemplazo, no son los íconos reales)</td></tr>
+          <tr><td>Trazo</td><td class="col-value">2px en la vista previa, 1.75 en la app</td></tr>
+          <tr><td>CDN</td><td class="col-value mono">unpkg.com/lucide-static@0.454.0/font/lucide.css</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── Acciones ── -->
+    <section id="cat-actions" class="cl-category-panel">
+      <div id="button" class="cl-component-group">
+        <h3>Botón</h3>
+        <p>Uno solo primario por pantalla, de 56 de alto y en la mitad de abajo. Se hunde 2px al tocar y vuelve con rebote.</p>
+        <div class="cl-canvas col">
+          <div class="cl-row">
+            <div class="cl-variant"><span class="cl-variant-label">Primario</span><button class="btn btn-primary cut"><i class="icon icon-play"></i>Jugar</button></div>
+            <div class="cl-variant"><span class="cl-variant-label">Secundario</span><button class="gem-sm btn btn-secondary">Ver la tabla</button></div>
+            <div class="cl-variant"><span class="cl-variant-label">Fantasma</span><button class="btn btn-ghost">Cancelar</button></div>
+            <div class="cl-variant"><span class="cl-variant-label">Destructivo</span><button class="gem-sm btn btn-danger"><i class="icon icon-lock"></i>Bloquear cuenta</button></div>
+          </div>
+          <div class="cl-row">
+            <div class="cl-variant"><span class="cl-variant-label">Hover</span><button class="btn btn-primary cut is-hover">Jugar</button></div>
+            <div class="cl-variant"><span class="cl-variant-label">Presionado</span><button class="btn btn-primary cut is-pressed">Jugar</button></div>
+            <div class="cl-variant"><span class="cl-variant-label">Foco</span><button class="btn btn-primary cut is-focus">Jugar</button></div>
+            <div class="cl-variant"><span class="cl-variant-label">Deshabilitado</span><button class="btn btn-primary cut is-disabled">Jugar</button></div>
+            <div class="cl-variant"><span class="cl-variant-label">Enviando</span><button class="btn btn-primary cut">Enviando…</button></div>
+          </div>
+          <div class="cl-row">
+            <div class="cl-variant"><span class="cl-variant-label">Chico</span><button class="btn btn-primary btn-sm cut">Entrar</button></div>
+            <div class="cl-variant"><span class="cl-variant-label">Secundario chico</span><button class="gem-sm btn btn-secondary btn-sm"><i class="icon icon-copy"></i>Copiar link</button></div>
+            <div class="cl-variant"><span class="cl-variant-label">Secundario hover</span><button class="gem-sm btn btn-secondary is-hover">Practicar</button></div>
+            <div class="cl-variant"><span class="cl-variant-label">Fantasma hover</span><button class="btn btn-ghost is-hover">Cancelar</button></div>
+          </div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Primario</td><td class="col-value">56px · --accent · --on-accent · Unbounded 700 16 mayúsculas · corte 8</td></tr>
+          <tr><td>Secundario / destructivo</td><td class="col-value">48px · --surface2 + borde --border-visible / --error-bg + --error</td></tr>
+          <tr><td>Presionado</td><td class="col-value">translateY(2px) scale(.98) 140ms, vuelve en 320ms con rebote</td></tr>
+          <tr><td>Foco</td><td class="col-value">anillo oro 2px, separación 2px</td></tr>
+        </table>
+      </div>
+
+      <div id="icon-button" class="cl-component-group">
+        <h3>Botón de ícono</h3>
+        <p>Siempre 48 de lado como mínimo para el pulgar; el chico (40) solo en escritorio.</p>
+        <div class="cl-canvas">
+          <div class="cl-variant"><span class="cl-variant-label">Primario</span><button class="ibtn primary cut" aria-label="Jugar"><i class="icon icon-play"></i></button></div>
+          <div class="cl-variant"><span class="cl-variant-label">Secundario</span><button class="gem-sm ibtn secondary" aria-label="Copiar"><i class="icon icon-copy"></i></button></div>
+          <div class="cl-variant"><span class="cl-variant-label">Fantasma</span><button class="ibtn ghost" aria-label="Volver"><i class="icon icon-chevron-left"></i></button></div>
+          <div class="cl-variant"><span class="cl-variant-label">Chico</span><button class="gem-sm ibtn secondary small" aria-label="Actualizar"><i class="icon icon-refresh-cw"></i></button></div>
+          <div class="cl-variant"><span class="cl-variant-label">Grande</span><button class="ibtn primary large cut" aria-label="Jugar"><i class="icon icon-play"></i></button></div>
+          <div class="cl-variant"><span class="cl-variant-label">Foco</span><button class="gem-sm ibtn secondary is-focus" aria-label="Copiar"><i class="icon icon-copy"></i></button></div>
+          <div class="cl-variant"><span class="cl-variant-label">Deshabilitado</span><button class="gem-sm ibtn secondary is-disabled" aria-label="Copiar"><i class="icon icon-copy"></i></button></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Tamaño</th><th>Valor</th></tr>
+          <tr><td>Chico / normal / grande</td><td class="col-value">40 / 48 / 56 px · ícono 16 / 20 / 24</td></tr>
+          <tr><td>Nombre accesible</td><td class="col-value">aria-label obligatorio</td></tr>
+        </table>
+      </div>
+
+      <div id="toggle-button" class="cl-component-group">
+        <h3>Botón alternable</h3>
+        <p>Para filtros del admin, como excluir un juego de la ruleta antes de la Fecha 1.</p>
+        <div class="cl-canvas">
+          <div class="cl-variant"><span class="cl-variant-label">Apagado</span><button class="gem-sm tbtn"><i class="icon icon-dices"></i>Zig</button></div>
+          <div class="cl-variant"><span class="cl-variant-label">Encendido</span><button class="gem-sm tbtn on"><i class="icon icon-check"></i>Tower Stack</button></div>
+          <div class="cl-variant"><span class="cl-variant-label">Foco</span><button class="gem-sm tbtn is-focus">Flap</button></div>
+          <div class="cl-variant"><span class="cl-variant-label">Deshabilitado</span><button class="gem-sm tbtn is-disabled">Piano</button></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Estado</th><th>Valor</th></tr>
+          <tr><td>Apagado</td><td class="col-value">--surface2 · borde --border-visible · --text2</td></tr>
+          <tr><td>Encendido</td><td class="col-value">--accent-subtle · borde --accent · --accent</td></tr>
+        </table>
+      </div>
+
+      <div id="segmented-control" class="cl-component-group">
+        <h3>Control segmentado</h3>
+        <p>Cambia la vista sin cambiar de pantalla: Hoy, Temporada, Histórico.</p>
+        <div class="cl-canvas">
+          <div class="cl-variant"><span class="cl-variant-label">Por defecto</span>
+            <div class="seg-ctl cut" style="--cut:8px"><button class="seg-opt cut sel">Hoy</button><button class="seg-opt cut is-hover">Temporada</button><button class="seg-opt cut">Histórico</button></div></div>
+          <div class="cl-variant"><span class="cl-variant-label">Deshabilitado</span>
+            <div class="seg-ctl cut is-disabled" style="--cut:8px"><button class="seg-opt cut sel">Hoy</button><button class="seg-opt cut">Temporada</button></div></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Pista</td><td class="col-value">--surface3, relleno 4px, corte 8</td></tr>
+          <tr><td>Seleccionado</td><td class="col-value">--surface1 · --text1 · corte 6</td></tr>
+        </table>
+      </div>
+
+      <div id="dropdown-menu" class="cl-component-group">
+        <h3>Menú</h3>
+        <p>Acciones del admin sobre una fecha. En el celu se abre como hoja desde abajo.</p>
+        <div class="cl-canvas dark">
+          <div class="menu-wrap"><div class="gem-sm menu">
+            <div class="mi is-hover"><i class="icon icon-eye"></i>Ver intentos en vivo</div>
+            <div class="mi checked"><i class="icon icon-radio"></i>Fecha abierta<i class="icon icon-check tick"></i></div>
+            <div class="mi"><i class="icon icon-settings"></i>Corregir resultado<i class="icon icon-chevron-right chev"></i></div>
+            <div class="mi-sep"></div>
+            <div class="mi is-disabled"><i class="icon icon-lock"></i>Cerrar fecha</div>
+            <div class="mi danger"><i class="icon icon-x"></i>Cancelar fecha</div>
+          </div></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Contenedor</td><td class="col-value">--surface2 · borde --border-visible · corte 8 · sombra nivel 2 en envoltorio</td></tr>
+          <tr><td>Ítem</td><td class="col-value">44px · hover --surface2 · marca --accent</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── Entradas ── -->
+    <section id="cat-inputs" class="cl-category-panel">
+      <div id="text-input" class="cl-component-group">
+        <h3>Campo de texto</h3>
+        <p>48 de alto sobre --surface3. El código de invitación va en mono, centrado y espaciado.</p>
+        <div class="cl-canvas">
+          <div class="in-wrap"><span class="label">Apodo</span><div class="gem-sm in"><span class="ph">Cómo te conocen</span></div></div>
+          <div class="in-wrap"><span class="label">Buscar jugador</span><div class="gem-sm in is-hover"><i class="icon icon-search"></i><span>Car</span><i class="icon icon-x clear"></i></div></div>
+          <div class="in-wrap"><span class="label">Código de invitación</span><div class="gem-sm in code is-focus is-focus">NX7K-Q2P</div><span class="in-help">Viene en el link del admin</span></div>
+          <div class="in-wrap"><span class="label">Código de invitación</span><div class="gem-sm in code is-error">NX7K-Q2</div><span class="in-help err">Ese código no existe o ya venció.</span></div>
+          <div class="in-wrap"><span class="label">Apodo</span><div class="gem-sm in is-success">Caro</div><span class="in-help ok">Disponible</span></div>
+          <div class="in-wrap"><span class="label">Email</span><div class="gem-sm in readonly">ari@ejemplo.com</div><span class="in-help">De tu cuenta de Google</span></div>
+          <div class="in-wrap is-disabled"><span class="label">Apodo</span><div class="gem-sm in"><span class="ph">Deshabilitado</span></div></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Estado</th><th>Valor</th></tr>
+          <tr><td>Por defecto / hover</td><td class="col-value">borde --border-visible / --text3</td></tr>
+          <tr><td>Foco</td><td class="col-value">borde --accent + anillo oro</td></tr>
+          <tr><td>Error / éxito</td><td class="col-value">borde --error / --success + texto de ayuda del mismo color</td></tr>
+          <tr><td>Solo lectura</td><td class="col-value">--surface2 · --text2</td></tr>
+        </table>
+      </div>
+
+      <div id="textarea" class="cl-component-group">
+        <h3>Área de texto</h3>
+        <p>Para el motivo de cada acción del admin, que queda en la auditoría.</p>
+        <div class="cl-canvas">
+          <div class="in-wrap" style="width:320px"><span class="label">Motivo</span><div class="gem-sm ta is-focus">Se cortó la luz en el piso 12, se repite el intento.</div><span class="ta-count num">52 / 280</span></div>
+          <div class="in-wrap" style="width:320px"><span class="label">Motivo</span><div class="gem-sm ta is-error"></div><span class="in-help err">Contá por qué, queda en la auditoría.</span></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Alto mínimo</td><td class="col-value">100px, crece en vertical</td></tr>
+          <tr><td>Límite</td><td class="col-value">280 caracteres, contador --caption --text3</td></tr>
+        </table>
+      </div>
+
+      <div id="select" class="cl-component-group">
+        <h3>Selector</h3>
+        <p>Vincular la cuenta a un jugador existente. En el celu la lista abre como hoja.</p>
+        <div class="cl-canvas">
+          <div class="in-wrap"><span class="label">Jugador</span><div class="gem-sm in sel-trigger"><span class="ph">Elegí un jugador</span><i class="icon icon-chevron-down chev"></i></div></div>
+          <div class="in-wrap"><span class="label">Jugador</span><div class="gem-sm in sel-trigger open is-focus"><span>Caro</span><i class="icon icon-chevron-down chev"></i></div></div>
+          <div class="in-wrap"><span class="label">Jugador</span><div class="gem-sm in sel-trigger is-error"><span class="ph">Elegí un jugador</span><i class="icon icon-chevron-down chev"></i></div><span class="in-help err">Falta el jugador</span></div>
+          <div class="in-wrap is-disabled"><span class="label">Jugador</span><div class="gem-sm in sel-trigger"><span>Fede</span><i class="icon icon-chevron-down chev"></i></div></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Estado</th><th>Valor</th></tr>
+          <tr><td>Abierto</td><td class="col-value">borde --accent, flecha rotada 180°</td></tr>
+        </table>
+      </div>
+
+      <div id="checkbox" class="cl-component-group">
+        <h3>Casilla</h3>
+        <p>Una gema chica: corte de 4 en lugar de esquinas redondas.</p>
+        <div class="cl-canvas">
+          <div class="chk-row"><span class="cb cut"></span>Sin marcar</div>
+          <div class="chk-row"><span class="cb cut checked"></span>Marcada</div>
+          <div class="chk-row"><span class="cb cut indet"></span>Algunos juegos</div>
+          <div class="chk-row"><span class="cb cut is-hover"></span>Hover</div>
+          <div class="chk-row"><span class="cb cut is-focus"></span>Foco</div>
+          <div class="chk-row is-disabled"><span class="cb cut checked"></span>Deshabilitada</div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Tamaño</td><td class="col-value">20px · borde 1.5px --border-visible · corte 4</td></tr>
+          <tr><td>Marcada</td><td class="col-value">--accent · tilde --on-accent 2px</td></tr>
+        </table>
+      </div>
+
+      <div id="radio-group" class="cl-component-group">
+        <h3>Opciones</h3>
+        <p>Los únicos controles redondos son los que son círculos de verdad.</p>
+        <div class="cl-canvas col">
+          <div class="chk-row"><span class="rd on"></span>Mantener el intento</div>
+          <div class="chk-row"><span class="rd is-hover"></span>Retirar el intento</div>
+          <div class="chk-row"><span class="rd is-focus"></span>Foco</div>
+          <div class="chk-row is-disabled"><span class="rd"></span>Deshabilitada</div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Elegida</td><td class="col-value">borde --accent · punto 10px --accent</td></tr>
+        </table>
+      </div>
+
+      <div id="switch" class="cl-component-group">
+        <h3>Interruptor</h3>
+        <p>Pista facetada y una gema que se desliza con rebote.</p>
+        <div class="cl-canvas col">
+          <div class="sw-row">Sonido en los juegos<span class="sw on"></span></div>
+          <div class="sw-row">Vibrar al terminar<span class="sw"></span></div>
+          <div class="sw-row">Foco<span class="sw is-focus"></span></div>
+          <div class="sw-row is-disabled">Pausar temporada<span class="sw"></span></div>
+          <div class="sw-row is-disabled">Reglas congeladas<span class="sw on"></span></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Pista</td><td class="col-value">48 × 28 · corte 8 · apagado --surface3 · prendido --accent</td></tr>
+          <tr><td>Gema</td><td class="col-value">20 · corte 4 · se mueve en 320ms con rebote</td></tr>
+        </table>
+      </div>
+
+      <div id="slider" class="cl-component-group">
+        <h3>Deslizador</h3>
+        <p>Cantidad de fechas de la temporada, de 1 a 21. El mango es una gema girada.</p>
+        <div class="cl-canvas col">
+          <div class="cl-variant"><span class="cl-variant-label">Por defecto</span><div class="sl"><div class="sl-fill" style="width:57%"></div><span class="sl-val" style="left:57%">12</span><span class="sl-thumb" style="left:57%"></span></div></div>
+          <div class="cl-variant"><span class="cl-variant-label">Arrastrando</span><div class="sl"><div class="sl-fill" style="width:100%"></div><span class="sl-val" style="left:100%">21</span><span class="sl-thumb is-active" style="left:100%"></span></div></div>
+          <div class="cl-variant is-disabled"><span class="cl-variant-label">Deshabilitado</span><div class="sl"><div class="sl-fill" style="width:20%"></div><span class="sl-thumb" style="left:20%"></span></div></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Pista</td><td class="col-value">4px · --surface3 · relleno --accent · puntas redondas</td></tr>
+          <tr><td>Mango</td><td class="col-value">18px girado 45° · --accent · al arrastrar scale 1.2 + --glow-gold</td></tr>
+        </table>
+      </div>
+
+      <div id="date-picker" class="cl-component-group">
+        <h3>Calendario</h3>
+        <p>Solo en el admin, para fechar la temporada.</p>
+        <div class="cl-canvas">
+          <div class="gem cal">
+            <div class="cal-head"><i class="icon icon-chevron-left"></i>Noviembre 2026<i class="icon icon-chevron-right"></i></div>
+            <div class="cal-grid">
+              <span class="dow">L</span><span class="dow">M</span><span class="dow">M</span><span class="dow">J</span><span class="dow">V</span><span class="dow">S</span><span class="dow">D</span>
+              <span class="day out">26</span><span class="day out">27</span><span class="day out">28</span><span class="day out">29</span><span class="day out">30</span><span class="day out">31</span><span class="day">1</span>
+              <span class="day today">2</span><span class="day">3</span><span class="day">4</span><span class="day">5</span><span class="day">6</span><span class="day picked cut">7</span><span class="day inrange">8</span>
+              <span class="day inrange">9</span><span class="day inrange">10</span><span class="day inrange">11</span><span class="day inrange">12</span><span class="day inrange">13</span><span class="day picked cut">14</span><span class="day">15</span>
+            </div>
+          </div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Estado</th><th>Valor</th></tr>
+          <tr><td>Hoy</td><td class="col-value">borde interno --border-visible</td></tr>
+          <tr><td>Elegido / rango</td><td class="col-value">--accent + --on-accent / --surface3</td></tr>
+        </table>
+      </div>
+
+      <div id="combobox" class="cl-component-group">
+        <h3>Buscador</h3>
+        <p>Buscar un juego para practicar; resalta en oro la parte que coincide.</p>
+        <div class="cl-canvas">
+          <div class="in-wrap"><span class="label">Filtrando</span><div class="gem-sm in is-focus"><i class="icon icon-search"></i><span>mem</span></div>
+            <div class="gem-sm combo-list"><div class="mi is-hover"><i class="icon icon-dices"></i><span><b>Mem</b>ory</span></div><div class="mi"><i class="icon icon-dices"></i><span>Color <b>Mem</b>ory</span></div></div></div>
+          <div class="in-wrap"><span class="label">Sin resultados</span><div class="gem-sm in is-focus"><i class="icon icon-search"></i><span>tetris</span></div>
+            <div class="gem-sm combo-list"><div class="combo-empty">Ningún juego se llama así.</div></div></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Coincidencia</td><td class="col-value">--accent 600</td></tr>
+          <tr><td>Vacío</td><td class="col-value">--body-sm --text3, dice qué pasó</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── Datos ── -->
+    <section id="cat-data-display" class="cl-category-panel">
+      <div id="card" class="cl-component-group">
+        <h3>Panel</h3>
+        <p>El gem-panel de Playus. Una idea por panel; nunca un panel dentro de otro.</p>
+        <div class="cl-canvas dark">
+          <div class="cl-variant"><span class="cl-variant-label">Por defecto</span><div class="gem card"><span class="label">Temporada 11</span><h4>3 cerradas, 9 por jugar</h4><p>Reglas congeladas desde la Fecha 1.</p><span class="caption">empezó el 4 de octubre</span></div></div>
+          <div class="cl-variant"><span class="cl-variant-label">Con imagen</span><div class="gem card"><div class="card-media"><i class="icon icon-trophy"></i></div><h4>Museo</h4><p>Lo que ya se jugó, en Playus.</p></div></div>
+          <div class="cl-variant"><span class="cl-variant-label">Interactivo · hover</span><div class="gem card interactive is-hover"><h4>Practicar Flap</h4><p>No suma puntos.</p></div></div>
+          <div class="cl-variant"><span class="cl-variant-label">Elegido</span><div class="gem card selected"><h4>Tower Stack</h4><p>Lo eligió la ruleta.</p></div></div>
+          <div class="cl-variant"><span class="cl-variant-label">Foco</span><div class="gem card is-focus"><h4>Fecha 3</h4><p>Cerrada.</p></div></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>gem-panel</td><td class="col-value">--surface1 · borde --border · corte 14 · relleno 24</td></tr>
+          <tr><td>gem-panel-sm</td><td class="col-value">--surface2 · corte 8 · relleno 16</td></tr>
+          <tr><td>Elegido</td><td class="col-value">--edge: var(--accent)</td></tr>
+        </table>
+      </div>
+
+      <div id="avatar" class="cl-component-group">
+        <h3>Avatar</h3>
+        <p>Iniciales del apodo: en Playus la identidad es el apodo, no la foto de Google.</p>
+        <div class="cl-canvas">
+          <div class="cl-variant"><span class="cl-variant-label">Chico</span><span class="av s">CA</span></div>
+          <div class="cl-variant"><span class="cl-variant-label">Medio</span><span class="av m">AR<span class="st live"></span></span></div>
+          <div class="cl-variant"><span class="cl-variant-label">Grande</span><span class="av l">FE<span class="st away"></span></span></div>
+          <div class="cl-variant"><span class="cl-variant-label">Ícono</span><span class="av m"><i class="icon icon-user"></i><span class="st off"></span></span></div>
+          <div class="cl-variant"><span class="cl-variant-label">Grupo</span><span class="av-group"><span class="av m">FE</span><span class="av m">AR</span><span class="av m">CA</span><span class="av m">+4</span></span></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Tamaños</td><td class="col-value">24 / 32 / 48</td></tr>
+          <tr><td>Estado</td><td class="col-value">jugando --live · ausente --warning · desconectado --text3</td></tr>
+        </table>
+      </div>
+
+      <div id="badge" class="cl-component-group">
+        <h3>Insignia</h3>
+        <p>Cuentas cortas, como pendientes de aceptar.</p>
+        <div class="cl-canvas">
+          <span class="badge neutral cut num">0</span><span class="badge ok cut num">7</span><span class="badge warn cut num">2</span><span class="badge err cut num">1</span><span class="badge info cut num">6</span>
+          <span class="badge-host"><button class="gem-sm ibtn secondary" aria-label="Cuentas"><i class="icon icon-users"></i></button><span class="badge warn cut num">2</span></span>
+          <span class="cl-row" style="gap:8px"><span class="sdot" style="background:var(--live)"></span><span class="sdot" style="background:var(--success)"></span><span class="sdot" style="background:var(--warning)"></span><span class="sdot" style="background:var(--error)"></span></span>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Medidas</td><td class="col-value">20px de alto · corte 4 · Inter 700 12</td></tr>
+        </table>
+      </div>
+
+      <div id="tag" class="cl-component-group">
+        <h3>Chip</h3>
+        <p>Etiqueta fija: siempre el mismo texto con el mismo color en toda la app.</p>
+        <div class="cl-canvas">
+          <span class="chip live cut"><span class="pulse"></span>EN VIVO</span>
+          <span class="chip ok cut">VÁLIDO</span><span class="chip ok cut">ACEPTADA</span><span class="chip ok cut">CERRADA</span>
+          <span class="chip warn cut">REPETICIÓN</span><span class="chip warn cut">PENDIENTE</span>
+          <span class="chip err cut">FALLADO</span><span class="chip err cut">BLOQUEADA</span>
+          <span class="chip live cut"><i class="icon icon-swords"></i>UNDERDOG</span>
+          <span class="chip gold cut"><i class="icon icon-star"></i>RÉCORD</span>
+          <span class="chip cut">Neutro</span><span class="chip cut is-hover">Hover</span><span class="chip sel cut">Elegido</span><span class="chip cut is-disabled">Deshabilitado</span>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Medidas</td><td class="col-value">28px · relleno 0 10 · corte 8 · Inter 600 12 · interlineado 1</td></tr>
+          <tr><td>Regla</td><td class="col-value">una etiqueta, un color, en toda la biblioteca</td></tr>
+        </table>
+      </div>
+
+      <div id="data-table" class="cl-component-group">
+        <h3>Tabla provisoria</h3>
+        <p>Filas de 48, números de ancho fijo. Tu fila lleva la barra de oro; las filas que cambiaron destellan una vez.</p>
+        <div class="cl-canvas">
+          <table class="dt">
+            <thead><tr><th class="r">#</th><th>Jugador</th><th class="r">Mejor</th><th class="r">Intentos</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="r first">1</td><td>Fede</td><td class="r v">41</td><td class="r"><span class="dots"><span class="dot used"></span><span class="dot used"></span><span class="dot used"></span></span></td><td></td></tr>
+              <tr class="mine"><td class="r">2</td><td>Ari (vos)</td><td class="r v">37</td><td class="r"><span class="dots"><span class="dot used"></span><span class="dot used"></span><span class="dot now"></span></span></td><td></td></tr>
+              <tr class="flash"><td class="r">3</td><td>Caro</td><td class="r v">34</td><td class="r"><span class="dots"><span class="dot used"></span><span class="dot used"></span><span class="dot"></span></span></td><td><span class="chip warn cut">REPETICIÓN</span></td></tr>
+              <tr class="is-hover"><td class="r">4</td><td>Tomi</td><td class="r v">30</td><td class="r"><span class="dots"><span class="dot used"></span><span class="dot"></span><span class="dot"></span></span></td><td></td></tr>
+              <tr><td class="r">5</td><td>Lu</td><td class="r v">19</td><td class="r"><span class="dots"><span class="dot used"></span><span class="dot"></span><span class="dot"></span><span class="dot extra"></span></span></td><td><span class="chip live cut"><i class="icon icon-swords"></i>UNDERDOG</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Estado</th><th>Valor</th></tr>
+          <tr><td>Tu fila</td><td class="col-value">--surface2 + barra izquierda 2px --accent</td></tr>
+          <tr><td>Actualizada</td><td class="col-value">--surface3 durante 320ms</td></tr>
+          <tr><td>Puesto 1</td><td class="col-value">número en --accent</td></tr>
+        </table>
+      </div>
+
+      <div id="skeleton" class="cl-component-group">
+        <h3>Carga</h3>
+        <p>NEXPLAY no usa esqueletos con brillo. Carga con una línea de texto o con la gema que gira.</p>
+        <div class="cl-canvas col">
+          <div class="loading-line"><span class="spin m"></span>Cargando la sala…</div>
+          <div class="loading-line"><i class="icon icon-refresh-cw"></i>Actualizando…</div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Esqueleto</td><td class="col-value">no se usa (lista de antipatrones)</td></tr>
+          <tr><td>Aparición del contenido</td><td class="col-value">fundido de 120ms</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── Navegación ── -->
+    <section id="cat-navigation" class="cl-category-panel">
+      <div id="tabs" class="cl-component-group">
+        <h3>Pestañas</h3>
+        <p>La barrita de oro se desliza con rebote a la pestaña activa.</p>
+        <div class="cl-canvas"><div class="tabs"><button class="tab active">Tabla provisoria</button><button class="tab is-hover">Ranking</button><button class="tab">Reglas</button><button class="tab is-disabled">Auditoría</button></div></div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Barra</td><td class="col-value">48px · borde inferior --border</td></tr>
+          <tr><td>Activa</td><td class="col-value">--text1 · barra 2px --accent, se mueve en 320ms con rebote</td></tr>
+        </table>
+      </div>
+
+      <div id="breadcrumb" class="cl-component-group">
+        <h3>Migas</h3>
+        <p>Solo en el admin de escritorio.</p>
+        <div class="cl-canvas"><nav class="crumbs"><a href="#">Admin</a><i class="icon icon-chevron-right"></i><a class="is-hover" href="#">Temporada 11</a><i class="icon icon-chevron-right"></i><span class="cur">Fecha 4</span></nav></div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Enlace / actual</td><td class="col-value">--text2 / --text1 600</td></tr>
+        </table>
+      </div>
+
+      <div id="pagination" class="cl-component-group">
+        <h3>Paginación</h3>
+        <p>Para la auditoría, que crece con cada acción del admin.</p>
+        <div class="cl-canvas"><div class="pager"><button class="pg cut is-disabled" aria-label="Anterior"><i class="icon icon-chevron-left"></i></button><button class="pg cut cur">1</button><button class="pg cut is-hover">2</button><button class="pg cut">3</button><button class="pg cut" aria-label="Siguiente"><i class="icon icon-chevron-right"></i></button></div></div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Actual</td><td class="col-value">--accent · --on-accent · corte 6</td></tr>
+        </table>
+      </div>
+
+      <div id="nav-menu" class="cl-component-group">
+        <h3>Barra inferior</h3>
+        <p>La navegación del jugador vive abajo, donde llega el pulgar.</p>
+        <div class="cl-canvas dark"><nav class="tabbar"><a class="tb active" href="#"><i class="icon icon-gem"></i>Sala</a><a class="tb is-hover" href="#"><i class="icon icon-trophy"></i>Ranking</a><a class="tb" href="#"><i class="icon icon-dices"></i>Practicar</a><a class="tb" href="#"><i class="icon icon-user"></i>Perfil</a></nav></div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Alto</td><td class="col-value">64px + área segura · --surface1 · borde superior --border</td></tr>
+          <tr><td>Activa</td><td class="col-value">--accent + barra superior 2px</td></tr>
+        </table>
+      </div>
+
+      <div id="link" class="cl-component-group">
+        <h3>Enlace</h3>
+        <p>Dentro del texto, subrayado discreto. Suelto, en oro con flecha.</p>
+        <div class="cl-canvas col">
+          <p class="t-body">Leé las <a class="lnk" href="#">reglas de la temporada</a> o <a class="lnk is-hover" href="#">el reglamento completo</a>. Ya viste <a class="lnk visited" href="#">cómo se calcula el bonus</a>.</p>
+          <a class="lnk-solo" href="#">Ver las reglas <i class="icon icon-chevron-right"></i></a>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Estado</th><th>Valor</th></tr>
+          <tr><td>Por defecto / hover</td><td class="col-value">subrayado --border-visible / --accent</td></tr>
+          <tr><td>Visitado</td><td class="col-value">--text2</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── Respuesta ── -->
+    <section id="cat-feedback" class="cl-category-panel">
+      <div id="alert" class="cl-component-group">
+        <h3>Alerta</h3>
+        <p>El panel de error de Playus, extendido a los cuatro estados. Dice qué pasó y qué hacer.</p>
+        <div class="cl-canvas col">
+          <div class="alert info cut gem-sm"><i class="icon icon-info"></i><div><b>La fecha está abierta</b><span>Tenés hasta que el admin la cierre.</span></div><i class="icon icon-x x"></i></div>
+          <div class="alert ok cut gem-sm"><i class="icon icon-circle-check"></i><div><b>Cuenta aceptada</b><span>Ya sos Ari en NEXPLAY.</span></div></div>
+          <div class="alert warn cut gem-sm"><i class="icon icon-triangle-alert"></i><div><b>Intento interrumpido</b><span>Lo revisa el admin antes de cerrar.</span></div></div>
+          <div class="alert err cut gem-sm"><i class="icon icon-circle-alert"></i><div><b>No se pudo guardar el intento</b><span>Revisá la conexión y tocá Reintentar.</span></div></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Forma</td><td class="col-value">gem-panel-sm · relleno 12 16 · ícono 20</td></tr>
+          <tr><td>Colores</td><td class="col-value">--*-bg de fondo, borde e ícono del color del estado, texto --text1</td></tr>
+        </table>
+      </div>
+
+      <div id="toast" class="cl-component-group">
+        <h3>Aviso</h3>
+        <p>Solo para efectos secundarios. Un resultado de juego nunca es un aviso.</p>
+        <div class="cl-canvas dark col">
+          <div class="toast-wrap"><div class="gem-sm toast t-ok"><i class="icon icon-circle-check"></i>Código copiado</div></div>
+          <div class="toast-wrap"><div class="gem-sm toast t-neutral"><i class="icon icon-copy"></i>Link de invitación listo<span class="act">Compartir</span></div></div>
+          <div class="toast-wrap"><div class="gem-sm toast t-warn"><i class="icon icon-triangle-alert"></i>Sin conexión, reintentando</div></div>
+          <div class="toast-wrap"><div class="gem-sm toast t-err"><i class="icon icon-circle-alert"></i>No se pudo copiar</div></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Lugar</td><td class="col-value">abajo al centro, sobre la barra inferior · uno por vez</td></tr>
+          <tr><td>Duración</td><td class="col-value">3000ms · entra subiendo 8px con rebote</td></tr>
+        </table>
+      </div>
+
+      <div id="progress" class="cl-component-group">
+        <h3>Progreso</h3>
+        <p>La temporada se muestra en segmentos, uno por fecha.</p>
+        <div class="cl-canvas col">
+          <div class="pbar"><div class="pbar-top"><span>Fecha 4 de 12</span><span class="num">33%</span></div><div class="ptrack"><div class="pfill" style="width:33%"></div></div></div>
+          <div class="pbar"><div class="pbar-top"><span>Jugaron</span><span class="num">6 de 7</span></div><div class="ptrack"><div class="pfill ok" style="width:86%"></div></div></div>
+          <div class="pbar"><div class="pbar-top"><span>Revisión pendiente</span><span class="num">1</span></div><div class="ptrack"><div class="pfill warn" style="width:14%"></div></div></div>
+          <div class="pbar"><div class="pbar-top"><span>Intentos fallados</span><span class="num">2</span></div><div class="ptrack"><div class="pfill err" style="width:10%"></div></div></div>
+          <div class="cl-variant"><span class="cl-variant-label">Temporada de 21 fechas</span>
+            <div class="psegs"><span class="done"></span><span class="done"></span><span class="cancel"></span><span class="done"></span><span class="done"></span><span class="done"></span><span class="open"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
+          <svg class="ring" viewBox="0 0 64 64" role="img" aria-label="6 de 7 jugaron"><circle cx="32" cy="32" r="26" fill="none" stroke="var(--surface3)" stroke-width="6"/><circle cx="32" cy="32" r="26" fill="none" stroke="var(--success)" stroke-width="6" stroke-linecap="round" stroke-dasharray="140 164" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" fill="var(--text1)" font-size="14" font-weight="700" font-family="Unbounded">6/7</text></svg>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Barra</td><td class="col-value">6px · pista --surface3 · puntas redondas</td></tr>
+          <tr><td>Segmentos</td><td class="col-value">cerrada --success · abierta --live · por jugar --surface3 · cancelada --error .5</td></tr>
+        </table>
+      </div>
+
+      <div id="spinner" class="cl-component-group">
+        <h3>Gema que gira</h3>
+        <p>Un cuadrado girado 45° que da vueltas. Con "reducir movimiento" queda quieto con texto.</p>
+        <div class="cl-canvas"><span class="spin s"></span><span class="spin m"></span><span class="spin l"></span></div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Tamaños</td><td class="col-value">16 / 24 / 32 de diagonal · trazo 2 --accent · 900ms lineal</td></tr>
+        </table>
+      </div>
+
+      <div id="empty-state" class="cl-component-group">
+        <h3>Estado vacío</h3>
+        <p>Dice por qué está vacío y qué podés hacer mientras.</p>
+        <div class="cl-canvas"><div class="empty"><div class="gem-sm empty-ico"><i class="icon icon-dices"></i></div><h4>Todavía no hay fecha abierta</h4><p>Cuando el admin la inicie, la ruleta gira acá.</p><button class="gem-sm btn btn-secondary">Practicar mientras</button></div></div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Ícono</td><td class="col-value">40 · --text3 dentro de gem-panel-sm</td></tr>
+          <tr><td>Acción</td><td class="col-value">solo si hay algo para hacer</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── Capas ── -->
+    <section id="cat-overlays" class="cl-category-panel">
+      <div id="modal" class="cl-component-group">
+        <h3>Modal y hoja</h3>
+        <p>En el celu se prefiere la hoja que sube desde abajo; el modal queda para confirmar algo que no se deshace.</p>
+        <div class="cl-canvas" style="padding:0;overflow:hidden">
+          <div class="backdrop">
+            <div class="modal-wrap"><div class="gem modal">
+              <div class="modal-head"><h4>¿Cerrar la Fecha 4?</h4><button class="ibtn ghost small" aria-label="Cerrar"><i class="icon icon-x"></i></button></div>
+              <p>Los puntos pasan al ranking de Playus y no se pueden cambiar sin dejar registro.</p>
+              <div class="modal-actions"><button class="btn btn-ghost">Cancelar</button><button class="btn btn-primary btn-sm cut">Cerrar fecha</button></div>
+            </div></div>
+            <div class="modal-wrap"><div class="gem sheet">
+              <div class="handle"></div>
+              <div class="mi"><i class="icon icon-user"></i>Caro</div><div class="mi checked"><i class="icon icon-user"></i>Fede<i class="icon icon-check tick"></i></div><div class="mi"><i class="icon icon-user"></i>Juli</div>
+            </div></div>
+          </div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Modal</td><td class="col-value">--surface1 · corte 14 · máx 400 · relleno 24 · sombra nivel 3 en envoltorio</td></tr>
+          <tr><td>Hoja</td><td class="col-value">corte arriba a la izquierda · agarradera 32 × 4 · se cierra arrastrando</td></tr>
+          <tr><td>Fondo</td><td class="col-value mono">rgba(8, 6, 20, 0.72)</td></tr>
+        </table>
+      </div>
+
+      <div id="popover" class="cl-component-group">
+        <h3>Globo</h3>
+        <p>Explica una regla sin salir de la pantalla.</p>
+        <div class="cl-canvas dark"><div class="pop-wrap"><div class="pop-arrow"></div><div class="gem-sm pop"><b>Underdog</b>Desde la Fecha 2, el último del ranking oficial juega con un 4º intento.</div></div></div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Contenedor</td><td class="col-value">gem-panel-sm · borde --border-visible · 260 de ancho · sombra nivel 2</td></tr>
+        </table>
+      </div>
+
+      <div id="tooltip" class="cl-component-group">
+        <h3>Ayuda</h3>
+        <p>Solo en escritorio. En el celu no hay hover: va una línea de texto debajo.</p>
+        <div class="cl-canvas"><div class="tip-host"><span class="tip cut">Actualiza cada 10 s</span><button class="gem-sm ibtn secondary" aria-label="Actualizar"><i class="icon icon-refresh-cw"></i></button></div></div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Medidas</td><td class="col-value">--surface3 · corte 4 · relleno 6 10 · máx 240 · aparece a los 400ms</td></tr>
+        </table>
+      </div>
+
+      <div id="accordion" class="cl-component-group">
+        <h3>Acordeón</h3>
+        <p>Las reglas del juego en la pantalla de instrucciones.</p>
+        <div class="cl-canvas dark">
+          <div class="gem acc">
+            <div class="acc-item open"><div class="acc-h">Objetivo<i class="icon icon-chevron-down"></i></div><div class="acc-b">Apilar la mayor cantidad de bloques sin que la torre se caiga.</div></div>
+            <div class="acc-item is-hover"><div class="acc-h">Controles<i class="icon icon-chevron-down"></i></div></div>
+            <div class="acc-item"><div class="acc-h">Cuándo termina<i class="icon icon-chevron-down"></i></div></div>
+            <div class="acc-item is-disabled"><div class="acc-h">Récord mundial<i class="icon icon-chevron-down"></i></div></div>
+          </div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Encabezado</td><td class="col-value">48px · Inter 600 15 · flecha 16 --text3, gira 180° con rebote</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── Piezas NEXPLAY ── -->
+    <section id="cat-nexplay" class="cl-category-panel">
+      <div id="score" class="cl-component-group">
+        <h3>Puntaje</h3>
+        <p>Lo más grande de su pantalla. Blanco siempre; oro con brillo solo si es récord personal.</p>
+        <div class="cl-canvas dark">
+          <div class="cl-variant score-demo"><span class="cl-variant-label">Normal</span><span class="t-score">37</span><div class="u">pisos</div></div>
+          <div class="cl-variant score-demo"><span class="cl-variant-label">Récord personal</span><span class="glow-gold-demo"><span class="t-score gold">41</span></span><div class="u">pisos</div></div>
+          <div class="cl-variant score-demo"><span class="cl-variant-label">Tiempo</span><span class="t-score">0,248</span><div class="u">segundos</div></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Tipo</td><td class="col-value">--score · Unbounded 900 56 · cifras de ancho fijo</td></tr>
+          <tr><td>Entrada</td><td class="col-value">cuenta hacia arriba en 450ms, se pasa 4% y se asienta</td></tr>
+        </table>
+      </div>
+
+      <div id="live-panel" class="cl-component-group">
+        <h3>Panel en vivo</h3>
+        <p>El único elemento que brilla en la sala: la fecha abierta.</p>
+        <div class="cl-canvas dark">
+          <div class="livewrap"><div class="gem livepanel">
+            <div class="top"><span class="chip live cut"><span class="pulse"></span>EN VIVO</span><span class="caption">Fecha 4 de 12</span></div>
+            <div class="t-heading">TOWER STACK</div>
+            <div class="row"><div><span class="label">Tu mejor</span><div class="t-heading num">37 <span class="caption">pisos</span></div></div><span class="dots"><span class="dot used"></span><span class="dot used"></span><span class="dot now"></span></span></div>
+            <button class="btn btn-primary cut"><i class="icon icon-play"></i>Jugar</button>
+          </div></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Borde</td><td class="col-value">--edge: var(--live)</td></tr>
+          <tr><td>Brillo</td><td class="col-value">envoltorio con filter: var(--glow-live)</td></tr>
+        </table>
+      </div>
+
+      <div id="ruleta" class="cl-component-group">
+        <h3>Ruleta facetada</h3>
+        <p>Ocho facetas, las cuatro gemas en cuatro de ellas. Gira, frena, se pasa 6° y vuelve al juego sorteado por el servidor.</p>
+        <div class="cl-canvas dark">
+          <svg class="ruleta" viewBox="0 0 200 200" role="img" aria-label="Ruleta de juegos">
+            <polygon points="100,100 65.6,16.9 134.4,16.9" fill="var(--accent)"/><polygon points="100,100 134.4,16.9 183.2,65.6" fill="var(--surface3)"/><polygon points="100,100 183.2,65.6 183.2,134.4" fill="var(--live)" opacity=".85"/><polygon points="100,100 183.2,134.4 134.4,183.2" fill="var(--surface2)"/><polygon points="100,100 134.4,183.2 65.6,183.2" fill="var(--error)" opacity=".85"/><polygon points="100,100 65.6,183.2 16.8,134.4" fill="var(--surface3)"/><polygon points="100,100 16.8,134.4 16.8,65.6" fill="var(--success)" opacity=".85"/><polygon points="100,100 16.8,65.6 65.6,16.9" fill="var(--surface2)"/>
+            <polygon points="87,68.6 113,68.6 131.4,87 131.4,113 113,131.4 87,131.4 68.6,113 68.6,87" fill="var(--surface1)" stroke="var(--border-visible)" stroke-width="1.5" stroke-linejoin="round"/>
+            <polygon points="65.6,16.9 134.4,16.9 183.2,65.6 183.2,134.4 134.4,183.2 65.6,183.2 16.8,134.4 16.8,65.6" fill="none" stroke="var(--border-visible)" stroke-width="1.5" stroke-linejoin="round"/>
+            <polygon points="90,0 110,0 100,16" fill="var(--accent)" stroke="var(--background)" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Giro</td><td class="col-value">3 a 4 vueltas, frena en 2.4s, rebote de 6°, se asienta en 320ms</td></tr>
+          <tr><td>Sin movimiento</td><td class="col-value">no gira; el juego aparece con un fundido</td></tr>
+        </table>
+      </div>
+
+      <div id="attempts" class="cl-component-group">
+        <h3>Intentos</h3>
+        <p>Un punto por intento. Los usados son neutros para que el oro siga siendo raro.</p>
+        <div class="cl-canvas">
+          <div class="cl-variant"><span class="cl-variant-label">Sin jugar</span><span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span></div>
+          <div class="cl-variant"><span class="cl-variant-label">Jugando el 3º</span><span class="dots"><span class="dot used"></span><span class="dot used"></span><span class="dot now"></span></span></div>
+          <div class="cl-variant"><span class="cl-variant-label">Completo</span><span class="dots"><span class="dot used"></span><span class="dot used"></span><span class="dot used"></span></span></div>
+          <div class="cl-variant"><span class="cl-variant-label">Underdog</span><span class="dots"><span class="dot used"></span><span class="dot"></span><span class="dot"></span><span class="dot extra"></span></span></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Estado</th><th>Valor</th></tr>
+          <tr><td>Usado / en curso / libre</td><td class="col-value">--text2 / --live con pulso / aro --border-visible</td></tr>
+          <tr><td>4º Underdog</td><td class="col-value">aro --live hasta que se usa</td></tr>
+        </table>
+      </div>
+
+      <div id="countdown" class="cl-component-group">
+        <h3>Cuenta regresiva</h3>
+        <p>Pasa a rubí en los últimos 5 segundos.</p>
+        <div class="cl-canvas">
+          <div class="cl-variant"><span class="cl-variant-label">Normal</span><span class="countdown">0:42</span></div>
+          <div class="cl-variant"><span class="cl-variant-label">Últimos 5 s</span><span class="countdown last">0:04</span></div>
+        </div>
+        <table class="cl-spec-table">
+          <tr><th>Propiedad</th><th>Valor</th></tr>
+          <tr><td>Tipo</td><td class="col-value">Unbounded 700 22 · ancho fijo</td></tr>
+          <tr><td>Final</td><td class="col-value">--error + pulso de escala por segundo (nada con reducir movimiento)</td></tr>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="floating-bar">
+  <button class="mode-btn" data-mode="light" aria-label="Modo claro"><i class="icon icon-sun"></i> Claro</button>
+  <button class="mode-btn active" data-mode="dark" aria-label="Modo oscuro"><i class="icon icon-moon"></i> Oscuro</button>
+</div>
+<script>
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.documentElement.dataset.theme = btn.dataset.mode;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+function switchCategory(cat) {
+  document.querySelectorAll('.cl-category-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.cl-toc-category').forEach(h => h.classList.remove('active'));
+  const panel = document.getElementById('cat-' + cat);
+  const header = document.querySelector(`.cl-toc-category[data-cat="${cat}"]`);
+  if (panel) panel.classList.add('active');
+  if (header) header.classList.add('active');
+}
+document.querySelectorAll('.cl-toc-category').forEach(h => h.addEventListener('click', () => switchCategory(h.dataset.cat)));
+document.querySelectorAll('.cl-toc-sub').forEach(a => a.addEventListener('click', e => {
+  e.preventDefault();
+  switchCategory(a.dataset.cat);
+  const target = document.querySelector(a.getAttribute('href'));
+  if (target) requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth' }));
+}));
+const groups = document.querySelectorAll('.cl-component-group');
+const tocSubs = document.querySelectorAll('.cl-toc-sub');
+window.addEventListener('scroll', () => {
+  let activeId = null;
+  groups.forEach(g => { if (g.offsetParent && g.getBoundingClientRect().top - 120 <= 0) activeId = g.id; });
+  if (activeId) tocSubs.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + activeId));
+}, { passive: true });
+document.querySelectorAll('a').forEach(a => { if (a.closest('.cl-toc')) return; a.addEventListener('click', e => e.preventDefault()); });
+</script>
+</body>
+</html>

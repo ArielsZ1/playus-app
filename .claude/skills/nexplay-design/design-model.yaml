@@ -1,0 +1,244 @@
+# NEXPLAY design model. Single source of truth for every file in this skill.
+# Derived from the Playus codebase (tailwind.config.js + src/index.css), not from a website.
+
+name: "NEXPLAY"
+philosophy: "The live sibling of Playus. Playus is the museum where finished fechas rest; NEXPLAY is the play floor where they happen. Same indigo night, same faceted gem cuts, same Unbounded voice, but the four gems stop being decoration and become game signals, and the interface answers the thumb with a short elastic bounce. Cold jewel precision against warm arcade pulse."
+primary_mode: "dark"
+brand_domain: "mobile-first minigame tournament for a closed group of friends (salas, fechas, ruleta, 3 intentos, tabla en vivo)"
+brand_type: "ui-rich"
+mono_for_code: true      # invitation codes, IDs in admin, audit identifiers
+mono_for_metrics: false  # scores stay in Unbounded / Inter with tabular-nums
+voice: ["directo", "competitivo entre amigos", "rioplatense (vos)"]
+
+observed_source:
+  files: ["tailwind.config.js", "src/index.css", "index.html", "src/components/IconoPremio.jsx"]
+  palette: { base: "#14102A", panel: "#1E1840", panel2: "#251D4D", line: "#3A3168", ink: "#F1EDFF", muted: "#B3ABD6", gold: "#E8B54D", ruby: "#E8636F", emerald: "#3FAE7A", sapphire: "#4E7FE8" }
+  fonts: { display: "Unbounded 500/700/900", body: "Inter 400/500/600/700" }
+  signature: "gem-panel: clip-path cuts two opposite corners (14px, 8px on small), the diagonal edge is redrawn with two linear-gradient backgrounds, edge and fill via --edge and --fill"
+  absent: ["drop shadows for elevation", "rounded corners", "light mode", "skeleton shimmer", "pill buttons"]
+
+# ── PRIMITIVES ──
+primitives:
+  colors:
+    neutral:          # indigo-tinted night, cool-violet temperature
+      0: "#FFFFFF"
+      50: "#F7F5FF"
+      100: "#F1EDFF"   # Playus ink
+      200: "#D9D3F2"
+      300: "#B3ABD6"   # Playus muted
+      400: "#8C84B3"
+      500: "#6A6296"
+      600: "#4A3F82"
+      700: "#3A3168"   # Playus line
+      800: "#2E2560"
+      900: "#251D4D"   # Playus panel2
+      925: "#1E1840"   # Playus panel
+      950: "#14102A"   # Playus base
+    brand:            # gold, the trophy
+      50: "#FDF7E8"
+      100: "#FAEBC7"
+      200: "#F5D995"
+      300: "#F2CF7F"
+      400: "#EDC163"
+      500: "#E8B54D"   # Playus gold
+      600: "#CC9632"
+      700: "#A47524"
+      800: "#7A561C"
+      900: "#523A15"
+      950: "#2B2018"
+    red:   { 50: "#FDEEEF", 500: "#E8636F", 900: "#4A1C26" }   # Playus ruby
+    green: { 50: "#ECF8F2", 500: "#3FAE7A", 900: "#12352A" }   # Playus emerald
+    amber: { 50: "#FEF4EA", 500: "#F2994A", 900: "#4A2A12" }   # new: keeps warning apart from gold
+    blue:  { 50: "#EEF3FE", 500: "#4E7FE8", 900: "#172A55" }   # Playus sapphire, the live signal
+  spacing: [0, 2, 4, 8, 12, 16, 24, 32, 48, 64, 96]
+  radii: [0, 999]     # facets replace rounding; 999 only for dots and avatars
+  cuts: [8, 14]       # gem corner cut sizes (clip-path), the real shape primitive
+
+# ── SEMANTIC TOKENS ──
+tokens:
+  colors:
+    dark:             # primary, the only mode the app ships
+      background: "{neutral.950}"
+      surface1: "{neutral.925}"
+      surface2: "{neutral.900}"
+      surface3: "{neutral.800}"
+      border: "{neutral.700}"
+      border_visible: "{neutral.600}"
+      text1: "{neutral.100}"
+      text2: "{neutral.300}"
+      text3: "{neutral.400}"
+      text4: "{neutral.500}"
+      accent: "{brand.500}"
+      accent_subtle: "{brand.950}"
+      on_accent: "{neutral.950}"
+      live: "{blue.500}"
+      live_bg: "{blue.900}"
+    light:            # derived, previews only
+      background: "{neutral.50}"
+      surface1: "{neutral.0}"
+      surface2: "{neutral.100}"
+      surface3: "{neutral.200}"
+      border: "{neutral.200}"
+      border_visible: "{neutral.300}"
+      text1: "{neutral.950}"
+      text2: "{neutral.600}"
+      text3: "{neutral.500}"
+      text4: "{neutral.400}"
+      accent: "{brand.700}"
+      accent_subtle: "{brand.50}"
+      on_accent: "{neutral.0}"
+      live: "{blue.500}"
+      live_bg: "{blue.50}"
+    success: "{green.500}"
+    warning: "{amber.500}"
+    error: "{red.500}"
+    success_bg: { light: "{green.50}", dark: "{green.900}" }
+    warning_bg: { light: "{amber.50}", dark: "{amber.900}" }
+    error_bg:   { light: "{red.50}",   dark: "{red.900}" }
+    gem_roles:
+      gold: "accent: Jugar, tu mejor marca, puesto 1, récord"
+      sapphire: "live: fecha abierta, tabla que se actualiza, intento en curso"
+      ruby: "error and time: cuenta regresiva final, fallo, bloqueado"
+      emerald: "success: intento válido, cuenta aceptada, fecha cerrada"
+
+  spacing: { 2xs: 2, xs: 4, sm: 8, md: 16, lg: 24, xl: 32, 2xl: 48, 3xl: 64, 4xl: 96 }
+
+  radii:
+    element: 0
+    control: 0
+    component: 0
+    container: 0
+    pill: 999
+  cuts:
+    sm: 8      # buttons, inputs, chips, small panels
+    lg: 14     # panels, sheets, modals
+
+  typography:
+    display:    { family: "Unbounded", size: "32px", weight: 700, line_height: 1.1, letter_spacing: "-0.01em" }
+    score:      { family: "Unbounded", size: "56px", weight: 900, line_height: 1, letter_spacing: "-0.02em" }
+    heading:    { family: "Unbounded", size: "22px", weight: 700, line_height: 1.2, letter_spacing: "-0.005em" }
+    subheading: { family: "Unbounded", size: "16px", weight: 500, line_height: 1.3, letter_spacing: "0" }
+    body:       { family: "Inter", size: "15px", weight: 400, line_height: 1.5, letter_spacing: "0" }
+    body_sm:    { family: "Inter", size: "13px", weight: 400, line_height: 1.45, letter_spacing: "0" }
+    caption:    { family: "Inter", size: "12px", weight: 500, line_height: 1.4, letter_spacing: "0.01em" }
+    label:      { family: "Inter", size: "11px", weight: 600, line_height: 1.2, letter_spacing: "0.08em", transform: "uppercase" }
+    mono:       { family: "IBM Plex Mono", size: "13px", weight: 500 }
+    numerals: "tabular-nums everywhere a number can change"
+
+  elevation:
+    strategy: "flat + live glow"
+    note: "clip-path clips box-shadow, so glows go on a wrapper with filter: drop-shadow"
+    dark:
+      level1: "none"
+      level2: "0 12px 32px rgba(8, 6, 20, 0.55)"
+      level3: "0 24px 64px rgba(8, 6, 20, 0.70)"
+      glow_live: "drop-shadow(0 0 14px rgba(78, 127, 232, 0.45))"
+      glow_gold: "drop-shadow(0 0 16px rgba(232, 181, 77, 0.45))"
+    light:
+      level1: "none"
+      level2: "0 12px 32px rgba(20, 16, 42, 0.12)"
+      level3: "0 24px 64px rgba(20, 16, 42, 0.18)"
+      glow_live: "drop-shadow(0 0 12px rgba(78, 127, 232, 0.30))"
+      glow_gold: "drop-shadow(0 0 12px rgba(164, 117, 36, 0.30))"
+
+  motion:
+    personality: "playful"
+    fast: { duration: "140ms", easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" }
+    medium: { duration: "320ms", easing: "cubic-bezier(0.34, 1.56, 0.64, 1)" }
+    slow: { duration: "450ms", easing: "cubic-bezier(0.34, 1.56, 0.64, 1)" }
+    press: "translateY(2px) scale(0.98) on pointerdown, spring back on release"
+    reduced: "prefers-reduced-motion: every transform and keyframe drops to instant, opacity fades of 120ms max"
+
+  touch:
+    min_target: 48
+    primary_height: 56
+
+  hero_stage:
+    preset: null
+    observed_style:
+      description: "Playus paints the body with two soft radial halos (sapphire top-left, gold top-right) on the indigo night. NEXPLAY keeps that field and puts its own object in front: a faceted gem wheel, the ruleta that picks the game."
+      where_used: ["landing hero", "pantalla de ruleta", "final CTA (background only)"]
+    background:
+      medium: "gradient"
+      color_mode: "palette"
+      saturation: "muted"
+      light_source: "top-l"
+      falloff: "radial"
+      vignette: "off"
+      texture: "clean"
+      motion: "static"
+      intensity: "subtle"
+      safe_zone: "full-bleed"
+      color_palette: ["#4E7FE8", "#E8B54D", "#251D4D", "#14102A"]
+    hero:
+      subject: "composition"
+      form: "ruleta-facetada"
+      placement: "off-center-right"
+      scale: "balanced"
+      tint: "brand"
+    relation:
+      type: "glow"
+      bleed: 30
+    disclaimer: "Rendered with SVG + CSS. The ruleta is an original NEXPLAY element, not a third-party asset."
+
+  iconography:
+    observed_style:
+      description: "Playus draws its own inline SVG icons on a 24 grid: 1.75px stroke, round caps and joins, outline only, simple geometric forms (trophy, gem, medal)."
+      stroke_weight: "regular (1.75px)"
+      corner_treatment: "soft"
+      fill_style: "outline"
+      form_language: "geometric"
+      visual_density: "minimal"
+    fallback_kit:
+      name: "Lucide"
+      weight: "default (2px)"
+      match_score: "high"
+      match_reasoning: "Lucide matches the geometric construction, round caps and minimal density of the Playus SVGs; its 2px stroke is a hair heavier than the observed 1.75px, which suits a thumb-first UI. Phosphor regular was the runner-up but its humanist curves fight the faceted gem shapes."
+      cdn: "https://unpkg.com/lucide-static@0.454.0/font/lucide.css"
+      icon_class_prefix: "icon icon-"
+    disclaimer: "Preview icons come from Lucide as a best-match fallback. In the React app, draw them as inline SVG with strokeWidth 1.75 like IconoPremio."
+
+components:
+  button_primary:
+    source: "derived"
+    shape: "gem cut 8px (clip-path, two opposite corners)"
+    background: "{accent}"
+    color: "{on_accent}"
+    height: 56
+    padding: "0 24px"
+    font: "Unbounded 700 16px, uppercase, 0.04em"
+    hover: "background brand.400"
+    active: "press transform"
+    focus: "inset 2px ring in {on_accent}; clip-path clips outlines, so gem-cut controls never use an outside ring"
+    justified_by: "Playus has no button component; the gem cut and gold come from gem-panel-gold and the trophy"
+  button_secondary: { source: "derived", background: "{surface2}", color: "{text1}", edge: "{border_visible}", height: 48 }
+  button_ghost: { source: "derived", background: "transparent", color: "{text2}", height: 40 }
+  button_destructive: { source: "derived", background: "{error_bg}", color: "{error}", edge: "{error}", height: 48 }
+  panel:
+    source: "observed"
+    class: "gem-panel"
+    cut: 14
+    fill: "{surface1}"
+    edge: "{border}"
+    padding: 24
+  panel_sm: { source: "observed", class: "gem-panel-sm", cut: 8, fill: "{surface2}", edge: "{border}", padding: 16 }
+  panel_live: { source: "derived", base: "panel", edge: "{live}", wrapper_filter: "glow_live" }
+  stat_label: { source: "observed", font: "label token", color: "{text2}" }
+  input: { source: "derived", height: 48, fill: "{surface3}", edge: "{border_visible}", cut: 8, focus_edge: "{accent}" }
+  attempt_dots: { source: "derived", size: 10, used: "{text2}", in_progress: "{live}", empty: "transparent + {border_visible} ring", underdog_fourth: "{live} ring" }
+  score: { source: "derived", color: "{text1}", new_personal_best: "{accent} + glow_gold" }
+  chip: { source: "derived", height: 28, cut: 8, padding: "0 10px", font: "caption 600" }
+
+app_screen:
+  archetype: "dashboard"
+  frame: "phone"
+  frame_params:
+    title: "NEXPLAY: Sala"
+  content_seed: "La sala un sábado a la tarde: Temporada 11, Fecha 4 de 12 abierta, juego Tower Stack, vos ya jugaste 2 de 3 intentos con 37 pisos, tabla provisoria de 7 jugadores refrescando cada 10 s, ranking de la temporada abajo y una barra inferior con Sala, Ranking, Practicar y Perfil."
+  required_tokens_checklist:
+    - "background, surface1, surface2, surface3, border, border_visible"
+    - "text1, text2, text3, text4"
+    - "accent, accent_subtle, live, success, warning, error"
+    - "display, score, heading, subheading, body, body-sm, caption, label"
+    - "mono for the invitation code chip"
+    - "cut sm + lg, radius pill for dots and avatars"
