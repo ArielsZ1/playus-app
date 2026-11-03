@@ -80,6 +80,14 @@ begin
   begin perform nx_terminar_intento(i1, 4700, ok); msg := null; exception when others then msg := sqlerrm; end;
   if msg is null or msg not like '%intento_cerrado%' then raise exception 'FALLA: 8b (%)', msg; end if;
 
+  -- 7d tope de 1 hora: una penalizacion enorme no llega al cierre (el formato 'FM9990.00' no da para mas)
+  perform set_config('request.jwt.claims', json_build_object('sub',ub,'role','authenticated')::text, true);
+  perform set_config('role','postgres',true);
+  update intentos set estado = 'en_curso', resultado = null, motivo = null, empezado_en = now() - interval '10 seconds' where id = i2;
+  perform set_config('role','authenticated',true);
+  i := nx_terminar_intento(i2, 10003000, '{"tiempo_ms":3000,"errores":100000,"penalizacion_ms":10000000}');
+  if i.estado <> 'invalido' or i.motivo <> 'demasiado_lento' or i.resultado is not null then raise exception 'FALLA: 7d %', i; end if;
+
   -- 9 tabla provisoria (la lee anon)
   perform set_config('role','anon',true);
   perform set_config('request.jwt.claims','{}',true);

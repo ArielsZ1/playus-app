@@ -41,6 +41,7 @@ const MOTIVOS = {
   no_cierra: 'El tiempo y los errores no coinciden.',
   datos_incompletos: 'Al intento le faltaron datos.',
   duracion_imposible: 'El intento terminó antes de lo que marcó el reloj.',
+  demasiado_lento: 'El intento pasó de una hora.',
   abandonado: 'Lo dejaste sin terminar.',
   fecha_cerrada: 'La fecha se cerró antes de que terminaras.',
   modulo_sin_validacion: 'Este juego todavía no se puede validar.',

@@ -24,7 +24,9 @@ export default function Ruleta({ nombres, elegido, onFin }) {
   useEffect(() => {
     if (reducido) return terminar()
     const id = requestAnimationFrame(() => setGirando(true))
-    return () => cancelAnimationFrame(id)
+    // por si transitionend no llega (pestaña en segundo plano): el giro dura 2500 ms
+    const respaldo = setTimeout(terminar, 3500)
+    return () => { cancelAnimationFrame(id); clearTimeout(respaldo) }
   }, [])
 
   if (reducido) {

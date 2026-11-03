@@ -67,7 +67,15 @@ export default function Jugar({ cuenta }) {
     } catch (err) {
       console.error(err)
       const codigo = codigoDeError(err)
-      return setFase(codigo === 'intento_cerrado' || codigo === 'intento_ajeno' ? 'rechazado' : 'errorEnvio')
+      if (codigo === 'intento_ajeno') return setFase('rechazado')
+      if (codigo !== 'intento_cerrado') return setFase('errorEnvio')
+      // Puede ser un reintento cuya primera respuesta se perdió: si el servidor ya lo guardó, se muestra
+      const mios = await getMisIntentos(fecha.id, cuenta.jugador_id).catch(() => [])
+      const guardado = mios.find((i) => i.id === actual.intento_id && (i.estado === 'completado' || i.estado === 'invalido'))
+      if (!guardado) return setFase('rechazado')
+      setUltimo(guardado)
+      setIntentos(mios)
+      return setFase('resultado')
     }
     setUltimo(fila)
     // La lista solo alimenta "tu mejor": si falla, se arma con lo que ya hay
