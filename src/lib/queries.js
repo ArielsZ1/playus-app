@@ -204,7 +204,7 @@ export async function upsertRecordHistorico({ jugador_id, juego_id, valor }) {
   const { data, error } = await supabase
     .from('records_jugador_juego')
     .upsert([{ jugador_id, juego_id, valor, era: 'playus', actualizado_en: new Date().toISOString() }], {
-      onConflict: 'jugador_id,juego_id',
+      onConflict: 'jugador_id,juego_id,era',
     })
     .select()
     .single()
@@ -219,7 +219,7 @@ export async function upsertRecordsHistoricos(records) {
     .from('records_jugador_juego')
     .upsert(
       validos.map((record) => ({ ...record, era: 'playus', actualizado_en: new Date().toISOString() })),
-      { onConflict: 'jugador_id,juego_id' },
+      { onConflict: 'jugador_id,juego_id,era' },
     )
     .select()
   if (error) throw error
