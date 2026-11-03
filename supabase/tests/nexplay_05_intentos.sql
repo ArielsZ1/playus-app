@@ -88,6 +88,19 @@ begin
   select * into tp from nx_tabla_provisoria where fecha_id = f.id and jugador_id = jb;
   if tp.mejor is not null or tp.intentos_usados <> 3 then raise exception 'FALLA: 9b %', tp; end if;
 
+  -- 9c un intento en_curso cuenta como usado; "jugando" solo si empezo hace menos de 10 minutos
+  perform set_config('role','postgres',true);
+  update intentos set estado = 'en_curso', resultado = null, motivo = null, datos = null, terminado_en = null,
+    empezado_en = now() - interval '1 hour' where id = i2;
+  perform set_config('role','anon',true);
+  select * into tp from nx_tabla_provisoria where fecha_id = f.id and jugador_id = jb;
+  if tp.intentos_usados <> 3 or tp.en_juego then raise exception 'FALLA: 9c viejo %', tp; end if;
+  perform set_config('role','postgres',true);
+  update intentos set empezado_en = now() where id = i2;
+  perform set_config('role','anon',true);
+  select * into tp from nx_tabla_provisoria where fecha_id = f.id and jugador_id = jb;
+  if tp.intentos_usados <> 3 or not tp.en_juego then raise exception 'FALLA: 9c reciente %', tp; end if;
+
   perform set_config('role','postgres',true);
   raise exception 'TEST_OK';
 end $$;

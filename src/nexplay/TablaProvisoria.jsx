@@ -70,7 +70,7 @@ export default function TablaProvisoria({ fechaId, menorEsMejor = true, miJugado
             return (
               <li
                 key={f.jugador_id}
-                className={`flex h-12 items-center gap-3 px-3 transition-colors duration-300 ${
+                className={`flex h-12 items-center gap-2 min-[360px]:gap-3 px-3 transition-colors duration-300 ${
                   cambiadas.has(f.jugador_id) ? 'bg-panel3' : mia ? 'bg-panel3/60' : ''
                 }`}
               >
@@ -81,8 +81,12 @@ export default function TablaProvisoria({ fechaId, menorEsMejor = true, miJugado
                   {f.apodo}
                   {mia && <span className="sr-only"> (vos)</span>}
                 </span>
+                {/* bajo 360px el chip deja el apodo en una letra: ahí va solo el punto zafiro */}
                 {f.en_juego && (
-                  <span className="nx-chip h-6 bg-live-bg text-sapphire border-sapphire">jugando</span>
+                  <>
+                    <span className="nx-chip h-6 bg-live-bg text-sapphire border-sapphire hidden min-[360px]:inline-flex">jugando</span>
+                    <span role="img" aria-label="jugando" className="size-2 shrink-0 rounded-full bg-sapphire min-[360px]:hidden" />
+                  </>
                 )}
                 <span className="w-16 text-right tabular-nums text-ink">{tiempo(f.mejor)}</span>
                 <span className="w-9 text-right text-caption tabular-nums text-faint">
