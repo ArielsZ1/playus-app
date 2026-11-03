@@ -23,7 +23,7 @@ Requires `.env` with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (see `.env
 
 - **All data access goes through `src/lib/queries.js`.** Pages never call `supabase` directly for data (only `App.jsx` uses it for auth session). Add new queries there; each throws on Supabase error and callers catch.
 - **Aggregation happens client-side.** Ranking (`getRanking`) and evolution chart (`getEvolucionGemas`) fetch raw `resultados` rows filtered via inner join on `fechas.temporada_id` and sum `gemas` in JS. There are no DB views/RPCs.
-- **Supabase tables:** `temporadas`, `fechas`, `juegos`, `jugadores`, `resultados` (keyed by fecha + jugador, upserted), `records_jugador_juego` (historical record per player+game), `premios`. The schema/RLS is not in this repo — it lives in the Supabase project. Public read, writes only for authenticated users (enforced by RLS).
+- **Supabase tables:** `temporadas`, `fechas`, `juegos`, `jugadores`, `resultados` (keyed by fecha + jugador, upserted), `records_jugador_juego` (historical record per player+game), `premios`. The original schema lives only in the Supabase project; changes since NEXPLAY are also kept in `supabase/migrations/`. Public read; writes only for the admin (`es_admin()` in RLS) — authenticated no longer means admin, because NEXPLAY players have sessions too. `npm run dev:practica` uses the `practica` schema (same Playus tables, fake data).
 - **Global state lives in `App.jsx`:** the season list, the selected `temporadaId` (defaults to the last one), and the auth session. These are passed as props; there is no context or state library. Pages are lazy-loaded routes.
 - **`/admin` is the only write surface** (`src/pages/Admin.jsx`, the largest file): create seasons/fechas/games/players, bulk-upsert results, records, premios. It renders `Login` when there is no session. Login only signs in existing accounts (sign-up was removed).
 - **Records:** "récord mundial" is stored on the `fecha` (tied to that day's game); "récord histórico" is per player+game in `records_jugador_juego` and persists across fechas. On save it keeps the best of stored / typed / that fecha's performance, using `juegos.menor_es_mejor` (true = lower wins, null = no validation); logic in `src/lib/records.js`.
@@ -32,3 +32,11 @@ Requires `.env` with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (see `.env
 ## Styling
 
 Tailwind with a custom dark "gem" palette in `tailwind.config.js` (`base`, `panel`, `ink`, `muted`, `gold`, `ruby`, `emerald`, `sapphire`). Reuse the component classes in `src/index.css` (`gem-panel`, `gem-panel-sm`, `stat-label`) for faceted panels instead of new ad-hoc styles.
+
+## NEXPLAY (`/nexplay/`)
+
+A third Vite entry (`nexplay/index.html` → `src/nexplay/`), like the museo, where players log in with Google (invite link + admin accepts) and will play minigames whose results feed the same `resultados` table. Design spec: `docs/superpowers/specs/2026-11-01-nexplay-design.md`; rules: `REGLAS_NEXPLAY.md`; game mechanics: `NexPlay Juegos.md`. Visual system: the `nexplay-design` skill + `DESIGN.md` (`nx-btn`, `nx-input`, `nx-chip` in `src/index.css`); every screen follows a states contract in `docs/superpowers/specs/`.
+- NEXPLAY tables/RPCs (`cuentas`, `invitaciones`, `auditoria`, `nx_*`) live in `public` even in práctica mode; call them through `nx` in `queries.js`.
+- Clients never write tournament data directly: everything goes through `security definer` RPCs that check permissions inside.
+- `vite.config.js` has a dev/preview rewrite so `/nexplay/*` deep links load the NEXPLAY page; production uses `vercel.json`.
+

@@ -5,7 +5,9 @@ description: Use when changing anything that reads or writes Supabase data in Pl
 
 # Cambios de datos en Playus
 
-El esquema y las políticas RLS viven solo en el proyecto Supabase `playus-app`, no en el repo. Nunca adivines nombres de columnas ni tipos.
+El esquema vivo está en el proyecto Supabase `playus-app` (id `qzeqjaxyeezqdycgzymq`). Las tablas viejas de Playus no tienen migraciones en el repo; desde NEXPLAY (2026-11) cada cambio queda también en `supabase/migrations/` y sus tests SQL en `supabase/tests/`. Nunca adivines nombres de columnas ni tipos: mirá la base.
+
+Hay dos esquemas con las mismas tablas de Playus: `public` (datos reales) y `practica` (`npm run dev:practica`, datos ficticios). Una columna nueva en una tabla de Playus va **en los dos**. Las tablas y funciones NEXPLAY (`cuentas`, `invitaciones`, `auditoria`, `nx_*`) viven solo en `public`, y el cliente las llama con `nx = supabase.schema('public')` en `queries.js`.
 
 ## 1. Verificar el esquema real
 
@@ -13,7 +15,8 @@ Antes de escribir una query o un campo nuevo:
 
 - Con el MCP de Supabase: `list_tables` del proyecto `playus-app` y revisá columnas, tipos y FKs de las tablas que tocás.
 - Anotá el **tipo de los `id`** (int o uuid). Los `<select>` devuelven string: si los ids son int, compará con `String(a) === String(b)` o convertí con `Number()`. Comparar `f.id === e.target.value` falla en silencio.
-- Si cambiás el esquema (columna, índice, constraint), hacelo con `apply_migration`, no con SQL suelto, y revisá `get_advisors` (seguridad) después. Toda tabla nueva necesita RLS: lectura pública, escritura solo `authenticated`.
+- Si cambiás el esquema (columna, índice, constraint), hacelo con `apply_migration`, no con SQL suelto, guardá el mismo SQL en `supabase/migrations/AAAAMMDD_NN_nombre.sql` y revisá `get_advisors` (seguridad) después. Una migración ya aplicada no se edita: se corrige con otra nueva. Las migraciones necesitan el OK del usuario en el chat.
+- Toda tabla nueva necesita RLS: lectura pública y **escritura solo admin** (`using (public.es_admin())`). "Autenticado" ya no significa admin: los jugadores de NEXPLAY también tienen sesión. Lo que escriben los jugadores pasa por funciones `security definer` que validan adentro, nunca por políticas de insert/update.
 
 ## 2. Dónde va el código
 
@@ -30,5 +33,6 @@ Antes de escribir una query o un campo nuevo:
 ## 4. Verificar
 
 1. `npm run build` sin errores.
-2. `npm run dev`, logueate en `/admin` y probá el flujo completo: crear → guardar → **recargar la página** → volver a abrir la misma fecha y confirmar que los valores guardados aparecen.
-3. Revisá `/`, `/fecha/:id` y `/jugador/:id` para ver que lo cargado se refleja.
+2. Probá el SQL nuevo dentro de `begin; … rollback;` impersonando roles (`set local role authenticated; select set_config('request.jwt.claims', …)`), como en `supabase/tests/`.
+3. `npm run dev`, logueate en `/admin` y probá el flujo completo: crear → guardar → **recargar la página** → volver a abrir la misma fecha y confirmar que los valores guardados aparecen.
+4. Revisá `/`, `/fecha/:id` y `/jugador/:id` para ver que lo cargado se refleja.
