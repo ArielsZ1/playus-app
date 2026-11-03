@@ -43,7 +43,7 @@ export default function App() {
 
   const noTemporada = (
     <div className="gem-panel px-6 py-8 text-center text-muted">
-      Todavía no hay ninguna temporada cargada. Las temporadas nuevas se crean en NEXPLAY.
+      Todavía no hay ninguna temporada cargada. Creá una desde la sección Admin.
     </div>
   )
 
@@ -117,7 +117,14 @@ export default function App() {
                       </button>
                     </div>
                   ) : (
-                    <Admin temporadaId={temporadaId} temporadas={temporadas} />
+                    <Admin
+                      temporadaId={temporadaId}
+                      temporadas={temporadas}
+                      onTemporadaCreada={(nueva) => {
+                        setTemporadas((prev) => [...prev, { ...nueva, cerradas: 0 }])
+                        setTemporadaId(nueva.id)
+                      }}
+                    />
                   )
                 }
               />

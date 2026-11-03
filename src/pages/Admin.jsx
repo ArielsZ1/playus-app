@@ -13,6 +13,7 @@ import {
   upsertResultados,
   deleteResultado,
   deleteResultados,
+  createTemporada,
   getRecordsPorJuego,
   upsertRecordsHistoricos,
   getUltimoRecordMundial,
@@ -50,7 +51,7 @@ function SelectorSentido({ value, onChange }) {
 
 const FECHA_VACIA = { numero_fecha: '', fecha_calendario: '', juego_id: '', bonus_porcentaje: '', record_mundial: '' }
 
-export default function Admin({ temporadaId, temporadas }) {
+export default function Admin({ temporadaId, temporadas, onTemporadaCreada }) {
   const esNexplay = temporadas.find((t) => t.id === temporadaId)?.es_nexplay
   const [juegos, setJuegos] = useState([])
   const [jugadores, setJugadores] = useState([])
@@ -82,6 +83,7 @@ export default function Admin({ temporadaId, temporadas }) {
       }
     }
 
+  const [nuevaTemporada, setNuevaTemporada] = useState({ nombre: '', fecha_inicio: '', fecha_fin: '' })
 
   const [premios, setPremios] = useState([])
   const [nuevoPremio, setNuevoPremio] = useState({ nombre: '', descripcion: '', jugador_id: '' })
@@ -332,6 +334,14 @@ export default function Admin({ temporadaId, temporadas }) {
     setMensaje('Resultado borrado.')
   })
 
+  const handleCrearTemporada = conError(async (e) => {
+    e.preventDefault()
+    const creada = await createTemporada(nuevaTemporada)
+    setNuevaTemporada({ nombre: '', fecha_inicio: '', fecha_fin: '' })
+    onTemporadaCreada?.(creada)
+    setMensaje('Temporada creada. Seleccionala desde el menú de arriba.')
+  })
+
   const handleCrearJugador = conError(async (e) => {
     e.preventDefault()
     const creado = await createJugador(nuevoJugadorApodo)
@@ -369,6 +379,34 @@ export default function Admin({ temporadaId, temporadas }) {
           {mensaje.texto}
         </div>
       )}
+
+      <section className="gem-panel p-6">
+        <h2 className="font-display text-xl mb-4">Nueva temporada</h2>
+        <form onSubmit={handleCrearTemporada} className="grid sm:grid-cols-3 gap-3">
+          <input
+            required
+            placeholder="Nombre (ej. Temporada 2)"
+            className={inputClass}
+            value={nuevaTemporada.nombre}
+            onChange={(e) => setNuevaTemporada({ ...nuevaTemporada, nombre: e.target.value })}
+          />
+          <input
+            type="date"
+            className={inputClass}
+            value={nuevaTemporada.fecha_inicio}
+            onChange={(e) => setNuevaTemporada({ ...nuevaTemporada, fecha_inicio: e.target.value })}
+          />
+          <input
+            type="date"
+            className={inputClass}
+            value={nuevaTemporada.fecha_fin}
+            onChange={(e) => setNuevaTemporada({ ...nuevaTemporada, fecha_fin: e.target.value })}
+          />
+          <button className="sm:col-span-3 bg-gold text-base font-medium py-2 hover:brightness-110">
+            Crear temporada
+          </button>
+        </form>
+      </section>
 
       <section className="gem-panel p-6">
         <h2 className="font-display text-xl mb-4">Jugadores</h2>

@@ -14,6 +14,16 @@ export async function getTemporadas() {
   return data.map((t) => ({ ...t, cerradas: t.cerradas.length }))
 }
 
+export async function createTemporada({ nombre, fecha_inicio, fecha_fin }) {
+  const { data, error } = await supabase
+    .from('temporadas')
+    .insert([{ nombre, fecha_inicio: fecha_inicio || null, fecha_fin: fecha_fin || null }])
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
 // Fechas que Playus muestra: las de Playus (estado null) y las NEXPLAY cerradas.
 const FECHA_VISIBLE = 'estado.is.null,estado.eq.cerrada'
 
