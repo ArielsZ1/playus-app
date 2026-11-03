@@ -83,8 +83,9 @@ begin
   perform set_config('request.jwt.claims','{}',true);
   select count(*) into n from auditoria;
   if n < 3 then raise exception 'FALLA: 10a auditoria vacia %', n; end if;
-  if exists (select 1 from auditoria a where a.antes::text ~ 'email|nombre|invitacion' or a.despues::text ~ 'email|nombre|invitacion'
-             or a.despues::text like '%'||cod||'%' or a.antes::text like '%'||cod||'%') then
+  -- solo cuentas/invitaciones llevan datos personales (temporadas tiene "nombre" legitimo)
+  if exists (select 1 from auditoria a where a.entidad in ('cuentas','invitaciones') and (a.antes::text ~ 'email|nombre|invitacion' or a.despues::text ~ 'email|nombre|invitacion'
+             or a.despues::text like '%'||cod||'%' or a.antes::text like '%'||cod||'%')) then
     raise exception 'FALLA: 10b auditoria filtra datos'; end if;
 
   perform set_config('role','postgres',true);

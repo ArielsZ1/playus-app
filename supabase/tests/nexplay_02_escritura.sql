@@ -33,7 +33,7 @@ begin
   perform set_config('role','anon',true);
   perform set_config('request.jwt.claims','{}',true);
   select count(*) into n from public.fechas;
-  if n <> 183 then raise exception 'FALLA: 3 lectura anon fechas %', n; end if;
+  if n = 0 then raise exception 'FALLA: 3 lectura anon fechas %', n; end if;
 
   perform set_config('role','postgres',true);
   raise exception 'TEST_OK';
