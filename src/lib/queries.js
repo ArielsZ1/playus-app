@@ -358,7 +358,9 @@ const nx = supabase.schema('public')
 const CUENTA_SELECT = '*, jugador:jugadores(id, apodo)'
 
 export async function getMiCuenta() {
-  const { data: { user } } = await supabase.auth.getUser()
+  // getSession lee la sesión local: un corte de red no debe parecer "sin cuenta".
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user
   if (!user) return null
   const { data, error } = await nx.from('cuentas').select(CUENTA_SELECT).eq('user_id', user.id).maybeSingle()
   if (error) throw error

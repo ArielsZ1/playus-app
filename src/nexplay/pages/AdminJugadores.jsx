@@ -215,7 +215,7 @@ function ElegirJugador({ libres, boton, enCursoTexto, onConfirmar, manejarError 
 
   // Si la lista cambió y el elegido ya no está libre, se vuelve a elegir.
   useEffect(() => {
-    if (eleccion && eleccion !== NUEVO && !libres.some((j) => j.id === eleccion)) setEleccion(libres.length ? '' : NUEVO)
+    if (eleccion !== NUEVO && !libres.some((j) => j.id === eleccion)) setEleccion(libres.length ? '' : NUEVO)
   }, [libres, eleccion])
 
   async function confirmar() {
@@ -275,12 +275,13 @@ function FilaConCuenta({ cuenta, libres, onVincular, onBloquear, manejarError })
     setError(null)
     try {
       await onBloquear(motivo.trim())
+      setPidiendoMotivo(false)
+      setMotivo('')
     } catch (err) {
+      // El motivo queda escrito para reintentar.
       setError(await manejarError(err))
     }
     setBloqueando(false)
-    setPidiendoMotivo(false)
-    setMotivo('')
   }
 
   return (
