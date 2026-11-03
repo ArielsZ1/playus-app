@@ -414,3 +414,57 @@ export async function bloquearCuenta(userId, motivo) {
   if (error) throw error
   return data
 }
+
+// ---------- NEXPLAY: torneo (etapa 2) ----------
+// La temporada NEXPLAY más reciente, sus fechas (sin canceladas) y la abierta, si hay.
+export async function getTorneoActual() {
+  const { data, error } = await nx
+    .from('temporadas')
+    .select('id, nombre, estado, cantidad_fechas, es_prueba, fechas(id, numero_fecha, estado, abierta_en, juego:juegos(id, nombre, modulo, menor_es_mejor))')
+    .eq('es_nexplay', true)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error) throw error
+  if (!data) return { temporada: null, fechas: [], abierta: null }
+  const fechas = data.fechas.filter((f) => f.estado !== 'cancelada').sort((a, b) => a.numero_fecha - b.numero_fecha)
+  return { temporada: data, fechas, abierta: fechas.find((f) => f.estado === 'abierta') ?? null }
+}
+
+export async function getTablaProvisoria(fechaId) {
+  const { data, error } = await nx.from('nx_tabla_provisoria').select('*').eq('fecha_id', fechaId)
+  if (error) throw error
+  return data
+}
+
+export async function getMisIntentos(fechaId, jugadorId) {
+  const { data, error } = await nx
+    .from('intentos')
+    .select('id, numero, estado, resultado, motivo, datos')
+    .eq('fecha_id', fechaId)
+    .eq('jugador_id', jugadorId)
+    .order('numero')
+  if (error) throw error
+  return data
+}
+
+// Para la animación de la ruleta: los nombres de todos los juegos.
+export async function getNombresJuegos() {
+  const { data, error } = await nx.from('juegos').select('nombre')
+  if (error) throw error
+  return data.map((j) => j.nombre)
+}
+
+async function rpc(nombre, args) {
+  const { data, error } = await nx.rpc(nombre, args)
+  if (error) throw error
+  return data
+}
+export const crearTemporadaNexplay = ({ nombre, cantidadFechas, esPrueba }) =>
+  rpc('nx_crear_temporada', { p_nombre: nombre, p_cantidad_fechas: cantidadFechas, p_es_prueba: esPrueba })
+export const iniciarTemporada = (id) => rpc('nx_iniciar_temporada', { p_temporada_id: id })
+export const iniciarFecha = (temporadaId) => rpc('nx_iniciar_fecha', { p_temporada_id: temporadaId })
+export const cerrarFecha = (fechaId) => rpc('nx_cerrar_fecha', { p_fecha_id: fechaId })
+export const empezarIntento = async (fechaId) => (await rpc('nx_empezar_intento', { p_fecha_id: fechaId }))[0]
+export const terminarIntento = (intentoId, resultado, datos) =>
+  rpc('nx_terminar_intento', { p_intento_id: intentoId, p_resultado: resultado, p_datos: datos })

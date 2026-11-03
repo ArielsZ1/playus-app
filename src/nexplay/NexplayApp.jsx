@@ -7,6 +7,8 @@ import { Cargando, Chip, ErrorRed, Marco, PanelAviso, codigoDeError, nombreVisib
 import Entrar from './pages/Entrar.jsx'
 import Inicio from './pages/Inicio.jsx'
 import AdminJugadores from './pages/AdminJugadores.jsx'
+import AdminTorneo from './pages/AdminTorneo.jsx'
+import Jugar from './pages/Jugar.jsx'
 import Privacidad from './pages/Privacidad.jsx'
 
 // Google devuelve los errores en ?error= o en #error=. Se lee una sola vez y se limpia la URL.
@@ -111,15 +113,17 @@ export default function NexplayApp() {
     contenido = (
       <Routes>
         <Route path="/" element={<Inicio cuenta={cuenta} />} />
+        <Route path="/jugar" element={<Jugar cuenta={cuenta} />} />
         {cuenta.es_admin && (
           <Route path="/admin" element={<AdminJugadores cuenta={cuenta} recargarCuenta={recargarCuenta} />} />
         )}
+        {cuenta.es_admin && <Route path="/admin/torneo" element={<AdminTorneo recargarCuenta={recargarCuenta} />} />}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
 
   return (
-    <Marco session={session} onSalir={salir}>
+    <Marco session={session} onSalir={salir} jugando={pathname === '/jugar' && vista === 'cuenta'}>
       {contenido}
     </Marco>
   )
