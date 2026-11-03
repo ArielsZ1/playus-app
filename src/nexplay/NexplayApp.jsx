@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { getMiCuenta, registrarseConCodigo } from '../lib/queries'
 import { borrarCodigo, leerCodigo } from './invitacion.js'
@@ -7,6 +7,7 @@ import { Cargando, Chip, ErrorRed, Marco, PanelAviso, codigoDeError, nombreVisib
 import Entrar from './pages/Entrar.jsx'
 import Inicio from './pages/Inicio.jsx'
 import AdminJugadores from './pages/AdminJugadores.jsx'
+import Privacidad from './pages/Privacidad.jsx'
 
 // Google devuelve los errores en ?error= o en #error=. Se lee una sola vez y se limpia la URL.
 function leerErrorGoogle() {
@@ -26,6 +27,7 @@ export default function NexplayApp() {
   const [vista, setVista] = useState('cargando')
   const [cuenta, setCuenta] = useState(null)
   const userId = session?.user?.id
+  const { pathname } = useLocation()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
@@ -78,7 +80,9 @@ export default function NexplayApp() {
   }
 
   let contenido
-  if (session === undefined) contenido = <Cargando texto="Cargando…" />
+  // Pública: Google la pide y tiene que verse sin sesión.
+  if (pathname === '/privacidad') contenido = <Privacidad />
+  else if (session === undefined) contenido = <Cargando texto="Cargando…" />
   else if (!session) contenido = <Entrar errorGoogle={errorGoogle} />
   else if (vista === 'cargando') contenido = <Cargando texto="Cargando tu cuenta…" />
   else if (vista === 'registrando') contenido = <Cargando texto="Uniéndote a NEXPLAY…" />

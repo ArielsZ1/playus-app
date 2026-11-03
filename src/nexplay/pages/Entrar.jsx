@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
 import { leerCodigo } from '../invitacion.js'
 import { Chip, PanelAviso, MENSAJE_RED } from '../componentes.jsx'
@@ -90,6 +91,7 @@ export default function Entrar({ errorGoogle }) {
             </button>
           </form>
         </details>
+        <Link to="/privacidad" className="inline-block py-2 text-caption text-faint hover:text-muted">Política de privacidad</Link>
       </div>
     </div>
   )
