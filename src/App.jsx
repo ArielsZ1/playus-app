@@ -51,8 +51,9 @@ export default function App() {
     getTemporadas()
       .then((data) => {
         setTemporadas(data)
-        const conFechas = data.filter((t) => t.cerradas > 0)
-        const defecto = conFechas.at(-1) ?? data.at(-1)
+        // Una temporada NEXPLAY recién creada no se muestra hasta tener una fecha cerrada
+        const visibles = data.filter((t) => !t.es_nexplay || t.cerradas > 0)
+        const defecto = visibles.at(-1) ?? data.at(-1)
         if (defecto) setTemporadaId(defecto.id)
       })
       .catch((err) => setErrorMsg(err.message))
