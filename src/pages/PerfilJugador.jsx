@@ -436,7 +436,10 @@ export default function PerfilJugador({ temporadas }) {
           <div className="grid sm:grid-cols-2 gap-3">
             {records.map((r) => (
               <div key={r.id} className="gem-panel-sm p-4">
-                <p className="stat-label">{r.juego?.nombre}</p>
+                <p className="stat-label">
+                  {r.juego?.nombre}
+                  {r.era === 'nexplay' && <span className="ml-2 text-sapphire">NEXPLAY</span>}
+                </p>
                 <p className="font-display text-lg text-gold">{r.valor}</p>
               </div>
             ))}

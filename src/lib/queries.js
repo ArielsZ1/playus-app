@@ -5,25 +5,21 @@ import { participo } from './fecha.js'
 export async function getTemporadas() {
   const { data, error } = await supabase
     .from('temporadas')
-    .select('*')
+    .select('*, cerradas:fechas(id)')
+    .eq('es_prueba', false)
+    .or('estado.is.null,estado.eq.cerrada', { referencedTable: 'cerradas' })
     .order('created_at', { ascending: true })
   if (error) throw error
-  return data
+  // cerradas = fechas jugadas: la temporada por defecto es la última que tiene alguna
+  return data.map((t) => ({ ...t, cerradas: t.cerradas.length }))
 }
 
-export async function createTemporada({ nombre, fecha_inicio, fecha_fin }) {
-  const { data, error } = await supabase
-    .from('temporadas')
-    .insert([{ nombre, fecha_inicio: fecha_inicio || null, fecha_fin: fecha_fin || null }])
-    .select()
-    .single()
-  if (error) throw error
-  return data
-}
+// Fechas que Playus muestra: las de Playus (estado null) y las NEXPLAY cerradas.
+const FECHA_VISIBLE = 'estado.is.null,estado.eq.cerrada'
 
 // ---------- Jugadores ----------
 export async function getJugadores() {
-  const { data, error } = await supabase.from('jugadores').select('*').order('apodo')
+  const { data, error } = await supabase.from('jugadores').select('*').eq('es_bot', false).order('apodo')
   if (error) throw error
   return data
 }
@@ -66,6 +62,7 @@ export async function getFechas(temporadaId) {
     .from('fechas')
     .select('*, juego:juegos(*), resultados(id, jugador_id, performance, rivales_superados, gemas, jugo, sancionado, nota)')
     .eq('temporada_id', temporadaId)
+    .or(FECHA_VISIBLE)
     .order('numero_fecha')
   if (error) throw error
   return data
@@ -120,6 +117,7 @@ export async function getFechaDetalle(fechaId) {
     .from('fechas')
     .select('*, juego:juegos(*), resultados(*, jugador:jugadores(*))')
     .eq('id', fechaId)
+    .or(FECHA_VISIBLE)
     .single()
   if (error) throw error
   return data
@@ -182,6 +180,7 @@ export async function getRecordsPorJuego(juegoId) {
     .from('records_jugador_juego')
     .select('*')
     .eq('juego_id', juegoId)
+    .eq('era', 'playus')
   if (error) throw error
   const mapa = {}
   data.forEach((r) => {
@@ -194,7 +193,7 @@ export async function upsertRecordHistorico({ jugador_id, juego_id, valor }) {
   if (valor === '' || valor === null || valor === undefined) return null
   const { data, error } = await supabase
     .from('records_jugador_juego')
-    .upsert([{ jugador_id, juego_id, valor, actualizado_en: new Date().toISOString() }], {
+    .upsert([{ jugador_id, juego_id, valor, era: 'playus', actualizado_en: new Date().toISOString() }], {
       onConflict: 'jugador_id,juego_id',
     })
     .select()
@@ -209,7 +208,7 @@ export async function upsertRecordsHistoricos(records) {
   const { data, error } = await supabase
     .from('records_jugador_juego')
     .upsert(
-      validos.map((record) => ({ ...record, actualizado_en: new Date().toISOString() })),
+      validos.map((record) => ({ ...record, era: 'playus', actualizado_en: new Date().toISOString() })),
       { onConflict: 'jugador_id,juego_id' },
     )
     .select()
@@ -315,7 +314,9 @@ export async function getPerfilJugador(jugadorId) {
 export async function getFechasTodas() {
   const { data, error } = await supabase
     .from('fechas')
-    .select('id, numero_fecha, temporada_id, sin_jugadores, juego:juegos(nombre, menor_es_mejor), resultados(jugador_id, performance, rivales_superados, gemas, jugo, sancionado)')
+    .select('id, numero_fecha, temporada_id, sin_jugadores, temporada:temporadas!inner(es_prueba), juego:juegos(nombre, menor_es_mejor), resultados(jugador_id, performance, rivales_superados, gemas, jugo, sancionado)')
+    .eq('temporada.es_prueba', false)
+    .or(FECHA_VISIBLE)
     .order('numero_fecha')
   if (error) throw error
   return data
