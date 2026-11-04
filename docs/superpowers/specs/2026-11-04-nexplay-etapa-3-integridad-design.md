@@ -53,6 +53,7 @@ La etapa 2 dejó un motor que funciona para una temporada de una fecha que el ad
 | E9 | Los que ya jugaron **no pierden nada** con una revancha: el ganador original conserva sus puntos y su victoria. |
 | E10 | El admin juega como cualquier jugador. |
 | E11 | Hay que hacer todo lo que faltaba de la spec general: Underdog, varias fechas con campeón y desempate, cancelar, corregir y pausar. |
+| E12 | **Ritmo por temporada** (pedido del usuario, 2026-11-04): al crearla se elige **diario** (el reloj de las 22:00, por defecto) o **maratón** (el admin abre y cierra cada fecha a mano, por ejemplo las 21 en una tarde). Una temporada maratón es real: cuenta en Playus igual que una diaria. El tick la ignora. **Sin revancha en maratón** [mi decisión: todos juegan en la misma tarde y la fecha siguiente se abre enseguida]. |
 
 ---
 
@@ -67,6 +68,7 @@ La etapa 2 dejó un motor que funciona para una temporada de una fecha que el ad
   3. **Abre** la siguiente fecha si la temporada está `activa` (no `pausada`) y todavía faltan fechas (§3.7).
 - **Iniciar la temporada:** el admin la inicia desde NEXPLAY (`nx_iniciar_temporada`, ya existe) y queda `activa`. La Fecha 1 la abre el próximo tick de las 22:00. **[mi decisión: que el admin pueda iniciarla a cualquier hora sin pensar en el reloj]**
 - **Temporadas de prueba (`es_prueba`):** el tick las ignora. El admin las sigue manejando a mano con "Iniciar fecha" y "Cerrar fecha", como en la etapa 2, para probar sin esperar 24 h. En temporadas reales esos botones no aparecen y las funciones manuales los rechazan. **[mi decisión: cerrar a mano una fecha real le acortaría el día a alguien]**
+- **Temporadas maratón (E12):** `reglas->>'ritmo' = 'maraton'`. Se manejan a mano igual que las de prueba, pero son reales (récords, Playus). El tick las ignora. Las manuales se permiten si `es_prueba` **o** ritmo maratón; si no, lanzan `ritmo_diario`.
 - Las funciones que llama el tick no pueden exigir `es_admin()`, porque `pg_cron` corre sin usuario. Se separa la lógica en funciones internas (sin `grant` a `authenticated`/`anon`) y los RPC del admin quedan como envoltorios que chequean permisos. En la auditoría, `admin_user_id` queda en null y `accion` con prefijo `auto_`. **[mi decisión]**
 - Si el tick falla un día (por ejemplo, la base estuvo caída), el siguiente tick hace lo pendiente: cierra lo vencido y abre una fecha. No intenta "recuperar" días perdidos. **[mi decisión]**
 

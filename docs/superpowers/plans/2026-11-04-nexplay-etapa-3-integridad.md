@@ -30,7 +30,7 @@
   - intentos: `reglas->>'intentos'` (3) o `reglas->>'intentos_underdog'` (4) si `jugador_id = any(fechas.underdogs)`;
   - la práctica es `numero = 0`, y el colchón cubre solo los números 1 y 2;
   - puntos = `10 + 10 × rivales + round(10 × bonus_porcentaje / 100)`.
-- Las temporadas reales solo se mueven con el tick. `nx_iniciar_fecha` y `nx_cerrar_fecha` manuales solo funcionan en temporadas `es_prueba` (error `solo_prueba`).
+- Ritmo por temporada (spec E12): `reglas->>'ritmo'` = `'diario'` (por defecto, sin la clave también es diario) o `'maraton'`. Las temporadas reales diarias solo se mueven con el tick. `nx_iniciar_fecha` y `nx_cerrar_fecha` manuales funcionan si `es_prueba` **o** ritmo `maraton` (si no, error `ritmo_diario`; reemplaza a `solo_prueba` de la migración 09). El tick ignora las maratón. Las maratón no tienen revancha.
 
 ## Review Focus
 
@@ -136,8 +136,10 @@
   - `nx__abrir_fecha(p_temporada_id uuid) returns fechas` (null si no abre). Es la apertura de `nx_iniciar_fecha` de la etapa 2 (`20261103_04`) más dos cosas:
     - Si `n >= 2`, pone `underdogs` = jugadores con cuenta `aceptado` y `jugador_id`, que tienen el menor total de `gemas` en las fechas `cerradas` de la temporada (0 si no tienen ninguna). Si hay empate, entran todos.
     - Si no hay juegos elegibles, la temporada pasa a `pausada`, audita `auto_sin_juegos` y devuelve null.
-  - `nx_iniciar_fecha(p_temporada_id)` (RPC) lanza `solo_admin`, `solo_prueba`, `temporada_no_activa`, `ya_hay_fecha_abierta`, `temporada_completa` o `sin_juegos_elegibles` (si `nx__abrir_fecha` devuelve null), y si no, llama a `nx__abrir_fecha`.
-  - `nx_tick() returns void`. Para cada temporada `es_nexplay and not es_prueba and estado in ('activa','pausada')`:
+  - `nx_iniciar_fecha(p_temporada_id)` (RPC) lanza `solo_admin`, `ritmo_diario` (temporada real con ritmo diario), `temporada_no_activa`, `ya_hay_fecha_abierta`, `temporada_completa` o `sin_juegos_elegibles` (si `nx__abrir_fecha` devuelve null), y si no, llama a `nx__abrir_fecha`.
+  - `nx_cerrar_fecha(p_fecha_id)` (RPC, `create or replace` de la 09): el chequeo `solo_prueba` pasa a ser `ritmo_diario` con la misma condición que `nx_iniciar_fecha`. Actualizar el caso 1 de `supabase/tests/nexplay_09_cierre_e3.sql` (espera `ritmo_diario`).
+  - `nx_crear_temporada(p_nombre, p_cantidad_fechas, p_es_prueba default false, p_ritmo text default 'diario')`: `drop function` de la firma de 3 argumentos y crear la de 4, con el mismo `revoke`/`grant`. Lanza `ritmo_invalido` si no es `diario` ni `maraton`. Guarda `reglas = reglas || jsonb_build_object('ritmo', p_ritmo)`. En `src/lib/queries.js`, `crearTemporadaNexplay` pasa `p_ritmo: ritmo ?? 'diario'` (el selector en la UI es de la Task 9).
+  - `nx_tick() returns void`. Para cada temporada `es_nexplay and not es_prueba and coalesce(reglas->>'ritmo','diario') = 'diario' and estado in ('activa','pausada')`:
     1. Cierra la fecha `abierta` si `abierta_en <= now() - interval '23 hours'`.
     2. Si queda `activa`, no hay fecha `abierta` y hay menos de `cantidad_fechas` cerradas, llama a `nx__abrir_fecha`.
     3. Toma `pg_advisory_xact_lock(hashtext('nx_tick'))` al empezar.
@@ -145,7 +147,7 @@
 
 - [ ] **Step 1: Escribir `supabase/tests/nexplay_10_reloj.sql`.** Temporada **real** (`es_prueba = false`) de 3 fechas, iniciada. Llama a `nx_tick()` como `postgres`:
   1. El primer tick abre la Fecha 1 sin `underdogs`.
-  2. `nx_iniciar_fecha` y `nx_cerrar_fecha` del admin en esta temporada → `solo_prueba`.
+  2. `nx_iniciar_fecha` y `nx_cerrar_fecha` del admin en esta temporada → `ritmo_diario`.
   3. Con `abierta_en = now() - 24h`, intentos de A y B y C sin jugar, el tick cierra la 1 y abre la 2 con `underdogs = {C}`, `bonus_porcentaje = 5` y un juego distinto. Para eso, el test habilita dentro de la transacción un segundo juego con `modulo`, como en la etapa 2 Task 4.
   4. Empate en el último puesto → los dos en `underdogs`.
   5. Un segundo tick inmediato no cambia nada: la 2 sigue abierta y no hay fechas nuevas.
@@ -153,6 +155,7 @@
   7. Sin juegos elegibles: el tick deja la temporada `pausada` y audita `auto_sin_juegos`.
   8. Al cerrar la última fecha la temporada queda `finalizada` con `campeones`, y el tick siguiente no hace nada.
   9. Las temporadas `es_prueba` no se tocan.
+  10. Maratón: `nx_crear_temporada(..., false, 'maraton')` guarda `reglas->>'ritmo' = 'maraton'`; `'semanal'` → `ritmo_invalido`. Iniciada, el tick no le abre fechas. El admin abre la 1 y la cierra a mano (sin esperar 24 h) y abre la 2 enseguida. Es real: la fecha cerrada escribe récords era `nexplay`. Se vuelve a correr `nexplay_09` (con `ritmo_diario`), `08`, `06` y `05` → `TEST_OK`.
 - [ ] **Step 2: Prueba en seco sin migración.** Esperado: falla.
 - [ ] **Step 3: Migración.** Prueba en seco con todo **menos** el `cron.schedule`. Pedir el OK al usuario, aclarando que habilita `pg_cron`. Aplicar (`nexplay_10_reloj`). Test real → `TEST_OK`. Verificar que `select jobname, schedule from cron.job` muestre `nx_tick | 0 1 * * *`. Confirmar que no hay temporadas NEXPLAY reales activas (`select count(*) from temporadas where es_nexplay and not es_prueba and estado in ('activa','pausada')` = 0).
 - [ ] **Step 4: Commit** `feat(nexplay): apertura con Underdog y reloj diario`.
@@ -197,6 +200,7 @@
     - la fecha está `cerrada`;
     - `now() < cerrada_en + 24h`;
     - `numero_fecha < cantidad_fechas`;
+    - la temporada no es ritmo `maraton` (spec E12);
     - `not sin_jugadores`;
     - el jugador no tiene intentos con `numero between 1 and 4` en la fecha;
     - no tiene un intento `es_revancha` previo.
@@ -270,7 +274,8 @@ Cubre las pantallas de spec §4, con los estados de cada una (cargando, error de
 - cancelar con motivo (con confirmación);
 - corregir un intento con motivo;
 - auditoría;
-- en temporadas de prueba, los botones manuales de iniciar y cerrar.
+- en temporadas de prueba y maratón, los botones manuales de iniciar y cerrar;
+- el selector de ritmo al crear (Diario 22:00 / Maratón a mano).
 
 - [ ] **Step 1: Escribir el contrato** con el skill `nexplay-design`.
 - [ ] **Step 2: Aprobación del usuario.** Esperar el OK antes de Task 8.
@@ -346,7 +351,8 @@ Cubre las pantallas de spec §4, con los estados de cada una (cargando, error de
     - `reanudarTemporada(id)`;
     - `getAuditoria({ limite = 50 })` (select de `auditoria` ordenado por `created_at desc`; `motivo` no es legible por la API según la migración 03, así que se muestra lo que la vista pública permita, y lo verifica el implementador con `list_tables`).
   - `AdminTorneo.jsx`, según el contrato:
-    - los botones de iniciar y cerrar fecha solo si `temporada.es_prueba`;
+    - los botones de iniciar y cerrar fecha solo si `temporada.es_prueba` o ritmo `maraton`;
+    - al crear la temporada, un selector de ritmo: Diario (22:00) / Maratón (a mano);
     - en `preparacion`, la lista de juegos jugables con un interruptor para excluirlos (`excluirJuego(temporadaId, juegoId, excluir)` en `queries.js`);
     - pausar y reanudar;
     - cancelar con motivo;
