@@ -7,7 +7,8 @@ create function public.nx__calcular_fecha(p_fecha_id uuid) returns void
 language plpgsql security definer set search_path = public as $$
 declare f public.fechas; t public.temporadas; menor boolean; bonus int;
 begin
-  select * into f from public.fechas where id = p_fecha_id;
+  -- for update: dos recalculos a la vez se serializan y el segundo lee los intentos ya confirmados
+  select * into f from public.fechas where id = p_fecha_id for update;
   select * into t from public.temporadas where id = f.temporada_id;
   select coalesce(j.menor_es_mejor, true) into menor from public.juegos j where j.id = f.juego_id;
   bonus := round(10 * coalesce(f.bonus_porcentaje, 0) / 100.0);
