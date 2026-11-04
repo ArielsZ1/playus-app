@@ -16,7 +16,7 @@ begin
 
   perform set_config('role','authenticated',true);
   perform set_config('request.jwt.claims', json_build_object('sub',adm,'role','authenticated')::text, true);
-  t := nx_crear_temporada('Test cierre', 2, false);
+  t := nx_crear_temporada('Test cierre', 2, false, 'maraton');  -- real; maraton para abrir a mano
   perform nx_iniciar_temporada(t.id);
 
   -- 1 fecha 1 (bonus 0): A 4000, B 5000, C 6000, D no juega

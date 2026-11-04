@@ -460,8 +460,8 @@ async function rpc(nombre, args) {
   if (error) throw error
   return data
 }
-export const crearTemporadaNexplay = ({ nombre, cantidadFechas, esPrueba }) =>
-  rpc('nx_crear_temporada', { p_nombre: nombre, p_cantidad_fechas: cantidadFechas, p_es_prueba: esPrueba })
+export const crearTemporadaNexplay = ({ nombre, cantidadFechas, esPrueba, ritmo }) =>
+  rpc('nx_crear_temporada', { p_nombre: nombre, p_cantidad_fechas: cantidadFechas, p_es_prueba: esPrueba, p_ritmo: ritmo ?? 'diario' })
 export const iniciarTemporada = (id) => rpc('nx_iniciar_temporada', { p_temporada_id: id })
 export const iniciarFecha = (temporadaId) => rpc('nx_iniciar_fecha', { p_temporada_id: temporadaId })
 export const cerrarFecha = (fechaId) => rpc('nx_cerrar_fecha', { p_fecha_id: fechaId })

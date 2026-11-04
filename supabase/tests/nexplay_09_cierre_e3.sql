@@ -23,7 +23,7 @@ begin
   perform set_config('role','authenticated',true);
   perform set_config('request.jwt.claims', json_build_object('sub',adm,'role','authenticated')::text, true);
   begin perform nx_cerrar_fecha(fr); msg := null; exception when others then msg := sqlerrm; end;
-  if msg is null or msg not like '%solo_prueba%' then raise exception 'FALLA: 1 (%)', msg; end if;
+  if msg is null or msg not like '%ritmo_diario%' then raise exception 'FALLA: 1 (%)', msg; end if;
   -- los nx__ no son para clientes
   begin perform nx__recalcular_fecha(fr); msg := null; exception when others then msg := sqlerrm; end;
   if msg is null or msg not like '%permission denied%' then raise exception 'FALLA: 1b (%)', msg; end if;
