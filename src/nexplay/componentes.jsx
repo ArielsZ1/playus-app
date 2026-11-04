@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { getMisIntentos, terminarIntento } from '../lib/queries'
+import { enviarPendiente, leerPendiente } from './pendiente.js'
 
 // Piezas que se repiten en varias pantallas de NEXPLAY (contrato de estados, sección 0).
 
@@ -7,7 +9,7 @@ export const MENSAJE_RED = 'No pudimos conectar con NEXPLAY. Revisá tu conexió
 // Las RPC lanzan 'codigo_invalido', 'solo_admin', etc. dentro del mensaje de error.
 export function codigoDeError(err) {
   const texto = `${err?.message ?? ''} ${err?.details ?? ''}`
-  return texto.match(/\b(codigo_invalido|no_autenticado|solo_admin|cuenta_inexistente|jugador_ya_vinculado|falta_jugador|no_podes_bloquearte|nombre_vacio|cantidad_invalida|no_en_preparacion|ya_hay_temporada_activa|temporada_no_activa|ya_hay_fecha_abierta|temporada_completa|sin_juegos_elegibles|fecha_no_abierta|no_habilitado|sin_intentos|intento_cerrado|intento_ajeno)\b/)?.[1] ?? null
+  return texto.match(/\b(codigo_invalido|no_autenticado|solo_admin|cuenta_inexistente|jugador_ya_vinculado|falta_jugador|no_podes_bloquearte|nombre_vacio|cantidad_invalida|no_en_preparacion|ya_hay_temporada_activa|temporada_no_activa|ya_hay_fecha_abierta|temporada_completa|sin_juegos_elegibles|fecha_no_abierta|no_habilitado|sin_intentos|intento_cerrado|intento_ajeno|sin_practica|sin_revancha|fuera_de_plazo|ritmo_diario|ritmo_invalido|motivo_vacio|estado_invalido|no_corregible|resultado_invalido)\b/)?.[1] ?? null
 }
 
 // Contrato de estados, sección 4. Lo que no está acá cae en el error de red.
@@ -28,12 +30,25 @@ const TEXTOS_ERROR = {
   sin_juegos_elegibles: 'No quedan juegos para la ruleta en esta temporada.',
   fecha_no_abierta: 'La fecha ya se cerró.',
   no_habilitado: 'Tu cuenta todavía no puede jugar. Hablá con el admin.',
-  sin_intentos: 'Ya usaste tus 3 intentos.',
-  intento_cerrado: 'Ese intento ya no se puede guardar.',
-  intento_ajeno: 'Ese intento ya no se puede guardar.',
+  // etapa 3 (contrato de estados etapa 3, sección 7)
+  sin_intentos: ({ max }) => `Ya usaste tus ${max} intentos.`,
+  intento_cerrado: 'Ese intento ya no se puede guardar. La fecha se cerró, se canceló o empezaste la revancha.',
+  intento_ajeno: 'Ese intento ya no se puede guardar. La fecha se cerró, se canceló o empezaste la revancha.',
+  sin_practica: 'Ya no podés jugar la práctica: se juega antes del intento 2, una sola vez.',
+  sin_revancha: 'Esa revancha ya no está disponible.',
+  fuera_de_plazo: ({ revancha }) =>
+    revancha
+      ? 'La revancha venció antes de que llegara tu resultado.'
+      : 'Tu resultado llegó tarde: pasaron más de 2 horas del cierre y ya no cuenta.',
+  ritmo_diario: 'Esta temporada se abre y se cierra sola a las 22:00.',
+  ritmo_invalido: 'Elegí Diario o Maratón.',
+  motivo_vacio: 'Escribí un motivo.',
+  estado_invalido: 'La temporada cambió de estado. Actualizamos la pantalla.',
+  no_corregible: 'Ese intento ya no se puede corregir. Actualizamos la lista.',
+  resultado_invalido: 'Escribí un tiempo válido, por ejemplo 4.70.',
 }
 // Errores que vienen de mirar un estado viejo: además del texto, se recarga la pantalla.
-export const ESTADO_VIEJO = new Set(['no_en_preparacion', 'temporada_no_activa', 'ya_hay_fecha_abierta', 'fecha_no_abierta'])
+export const ESTADO_VIEJO = new Set(['no_en_preparacion', 'temporada_no_activa', 'ya_hay_fecha_abierta', 'fecha_no_abierta', 'ritmo_diario', 'estado_invalido'])
 
 // Por qué un intento quedó sin validez (intentos.motivo).
 const MOTIVOS = {
@@ -41,19 +56,25 @@ const MOTIVOS = {
   no_cierra: 'El tiempo y los errores no coinciden.',
   datos_incompletos: 'Al intento le faltaron datos.',
   duracion_imposible: 'El intento terminó antes de lo que marcó el reloj.',
-  demasiado_lento: 'El intento pasó de una hora.',
+  demasiado_lento: 'Ese intento pasó de 1 hora.',
   abandonado: 'Lo dejaste sin terminar.',
   fecha_cerrada: 'La fecha se cerró antes de que terminaras.',
   modulo_sin_validacion: 'Este juego todavía no se puede validar.',
+  colchon: 'El colchón salvó este intento.',
+  fecha_cancelada: 'La fecha se canceló.',
+  corregido: 'El admin corrigió este resultado.',
 }
 export const textoDeMotivo = (motivo) => MOTIVOS[motivo] ?? 'El intento no se pudo validar.'
 
 // Tiempos como en el historial de Playus: segundos con 2 decimales y punto.
 export const tiempo = (ms) => (ms == null ? '—' : `${(Number(ms) / 1000).toFixed(2)} s`)
 
-// Mejor resultado válido de una lista de intentos.
+// Los intentos que cuentan para la tabla: ni la práctica (0), ni la revancha, ni el salvado por el colchón.
+export const cuenta = (i) => i.numero >= 1 && !i.es_revancha && i.motivo !== 'colchon'
+
+// Mejor resultado válido de una lista de intentos (solo los que cuentan).
 export function mejorDe(intentos, menorEsMejor = true) {
-  const v = intentos.filter((i) => i.estado === 'completado').map((i) => Number(i.resultado))
+  const v = intentos.filter((i) => cuenta(i) && i.estado === 'completado').map((i) => Number(i.resultado))
   if (v.length === 0) return null
   return menorEsMejor ? Math.min(...v) : Math.max(...v)
 }
@@ -66,8 +87,63 @@ export function useCadaDiezSegundos(fn, activo = true) {
     return () => clearInterval(id)
   }, [fn, activo])
 }
-export function textoDeError(codigo) {
-  return TEXTOS_ERROR[codigo] ?? MENSAJE_RED
+// extra: { max } para sin_intentos, { revancha } para fuera_de_plazo
+export function textoDeError(codigo, extra = {}) {
+  const t = TEXTOS_ERROR[codigo] ?? MENSAJE_RED
+  return typeof t === 'function' ? t(extra) : t
+}
+
+// Manda el resultado pendiente (contrato etapa 3, sección 3). p: el de memoria si no hay localStorage.
+// → null | { estado: 'enviado'|'descartado'|'reintentar', p, fila, codigo }
+export async function subirPendiente(p = leerPendiente()) {
+  if (!p) return null
+  let fila = null
+  let codigo = null
+  const estado = await enviarPendiente(async (...args) => {
+    try {
+      fila = await terminarIntento(...args)
+    } catch (err) {
+      console.error(err)
+      codigo = codigoDeError(err)
+      throw err
+    }
+  }, p)
+  // intento_cerrado puede ser un reintento cuya primera respuesta se perdió: si el servidor ya lo guardó, llegó
+  if (estado === 'descartado' && codigo === 'intento_cerrado' && p.fecha_id && p.jugador_id) {
+    const mios = await getMisIntentos(p.fecha_id, p.jugador_id).catch(() => [])
+    const guardado = mios.find((i) => i.id === p.intento_id && (i.estado === 'completado' || i.estado === 'invalido'))
+    if (guardado) return { estado: 'enviado', p, fila: guardado, codigo: null }
+  }
+  return { estado, p, fila, codigo }
+}
+
+// "del intento 2" / "de la práctica" / "de la revancha"
+export const delIntento = (p) =>
+  p.tipo === 'practica' ? 'de la práctica' : p.tipo === 'revancha' ? 'de la revancha' : `del intento ${p.numero}`
+
+// Hoja inferior (DESIGN: bottom sheet). <dialog> nativo: atrapa el foco y cierra con Escape.
+export function HojaInferior({ abierta, onCerrar, titulo, children }) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const d = ref.current
+    if (abierta && !d.open) d.showModal()
+    if (!abierta && d.open) d.close()
+  }, [abierta])
+  return (
+    <dialog
+      ref={ref}
+      onClose={onCerrar}
+      onClick={(e) => e.target === ref.current && onCerrar()}
+      aria-labelledby="hoja-titulo"
+      className="m-0 mt-auto w-full max-w-none bg-transparent p-0 backdrop:bg-[rgba(8,6,20,0.72)]"
+    >
+      <div className="mx-auto max-w-[480px] bg-panel p-6 pb-8 space-y-4 [clip-path:polygon(0_14px,14px_0,100%_0,100%_100%,0_100%)]">
+        <span className="mx-auto block h-1 w-8 rounded-full bg-line2" aria-hidden="true" />
+        <h2 id="hoja-titulo" className="text-body font-semibold text-ink">{titulo}</h2>
+        {children}
+      </div>
+    </dialog>
+  )
 }
 
 export function nombreVisible(cuenta) {
@@ -142,6 +218,27 @@ const CHIPS = {
   oro: 'bg-gold-subtle text-gold border-gold',
 }
 
-export function Chip({ tono, children }) {
-  return <span className={`nx-chip ${CHIPS[tono]}`}>{children}</span>
+// late: el punto que late de lo que está en vivo (DESIGN.md)
+export function Chip({ tono, late = false, children }) {
+  return (
+    <span className={`nx-chip ${CHIPS[tono]} ${late ? 'gap-1.5' : ''}`}>
+      {late && (
+        <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
+          <span className="absolute inline-flex h-full w-full rounded-full bg-sapphire opacity-60 motion-safe:animate-ping [animation-duration:2s]" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-sapphire" />
+        </span>
+      )}
+      {children}
+    </span>
+  )
+}
+
+// La hora actual, que se renueva cada segundo (cuentas regresivas).
+export function useAhora() {
+  const [ahora, setAhora] = useState(() => new Date())
+  useEffect(() => {
+    const id = setInterval(() => setAhora(new Date()), 1000)
+    return () => clearInterval(id)
+  }, [])
+  return ahora
 }

@@ -416,19 +416,36 @@ export async function bloquearCuenta(userId, motivo) {
 }
 
 // ---------- NEXPLAY: torneo (etapa 2) ----------
-// La temporada NEXPLAY más reciente, sus fechas (sin canceladas) y la abierta, si hay.
+// La temporada NEXPLAY más reciente, sus fechas (sin canceladas), la abierta, la última cerrada (revancha),
+// la cancelada si es la última y no hay otra abierta (contrato etapa 3, sección 5) y los apodos de los campeones.
 export async function getTorneoActual() {
   const { data, error } = await nx
     .from('temporadas')
-    .select('id, nombre, estado, cantidad_fechas, es_prueba, fechas(id, numero_fecha, estado, abierta_en, juego:juegos(id, nombre, modulo, menor_es_mejor))')
+    .select('id, nombre, estado, cantidad_fechas, es_prueba, reglas, campeones, fechas(id, numero_fecha, estado, abierta_en, cerrada_en, underdogs, juego:juegos(id, nombre, modulo, menor_es_mejor))')
     .eq('es_nexplay', true)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
   if (error) throw error
-  if (!data) return { temporada: null, fechas: [], abierta: null }
+  if (!data) return { temporada: null, fechas: [], abierta: null, ultimaCerrada: null, cancelada: null, campeones: [] }
+  const porCierre = (a, b) => new Date(b.cerrada_en ?? 0) - new Date(a.cerrada_en ?? 0)
   const fechas = data.fechas.filter((f) => f.estado !== 'cancelada').sort((a, b) => a.numero_fecha - b.numero_fecha)
-  return { temporada: data, fechas, abierta: fechas.find((f) => f.estado === 'abierta') ?? null }
+  const abierta = fechas.find((f) => f.estado === 'abierta') ?? null
+  const ultima = [...data.fechas].filter((f) => f.cerrada_en).sort(porCierre)[0] ?? null
+  let campeones = []
+  if (data.campeones?.length) {
+    const { data: js, error: e2 } = await nx.from('jugadores').select('id, apodo').in('id', data.campeones)
+    if (e2) throw e2
+    campeones = data.campeones.map((id) => js.find((j) => j.id === id)).filter(Boolean)
+  }
+  return {
+    temporada: data,
+    fechas,
+    abierta,
+    ultimaCerrada: fechas.filter((f) => f.estado === 'cerrada').sort(porCierre)[0] ?? null,
+    cancelada: !abierta && ultima?.estado === 'cancelada' ? ultima : null,
+    campeones,
+  }
 }
 
 export async function getTablaProvisoria(fechaId) {
@@ -440,7 +457,7 @@ export async function getTablaProvisoria(fechaId) {
 export async function getMisIntentos(fechaId, jugadorId) {
   const { data, error } = await nx
     .from('intentos')
-    .select('id, numero, estado, resultado, motivo, datos')
+    .select('id, numero, estado, resultado, motivo, datos, es_revancha')
     .eq('fecha_id', fechaId)
     .eq('jugador_id', jugadorId)
     .order('numero')
@@ -465,6 +482,12 @@ export const crearTemporadaNexplay = ({ nombre, cantidadFechas, esPrueba, ritmo 
 export const iniciarTemporada = (id) => rpc('nx_iniciar_temporada', { p_temporada_id: id })
 export const iniciarFecha = (temporadaId) => rpc('nx_iniciar_fecha', { p_temporada_id: temporadaId })
 export const cerrarFecha = (fechaId) => rpc('nx_cerrar_fecha', { p_fecha_id: fechaId })
-export const empezarIntento = async (fechaId) => (await rpc('nx_empezar_intento', { p_fecha_id: fechaId }))[0]
+export const empezarIntento = async (fechaId, { practica = false } = {}) =>
+  (await rpc('nx_empezar_intento', { p_fecha_id: fechaId, p_practica: practica }))[0]
+export const empezarRevancha = async (fechaId) => (await rpc('nx_empezar_revancha', { p_fecha_id: fechaId }))[0]
+// { intentos_max, usados, underdog, practica: 'disponible'|'usada'|'cerrada', colchon_usado }
+export const getMiFecha = (fechaId) => rpc('nx_mi_fecha', { p_fecha_id: fechaId })
+// { fecha_id, numero_fecha, juego, a_superar, termina_en } o null
+export const getMiRevancha = () => rpc('nx_mi_revancha')
 export const terminarIntento = (intentoId, resultado, datos) =>
   rpc('nx_terminar_intento', { p_intento_id: intentoId, p_resultado: resultado, p_datos: datos })

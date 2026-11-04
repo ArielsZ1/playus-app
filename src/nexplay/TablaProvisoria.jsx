@@ -3,7 +3,9 @@ import { getTablaProvisoria } from '../lib/queries'
 import { Cargando, tiempo, useCadaDiezSegundos } from './componentes.jsx'
 
 // Contrato de estados etapa 2, sección 4.
-export default function TablaProvisoria({ fechaId, menorEsMejor = true, miJugadorId, intentosMax = 3 }) {
+// Contrato etapa 3, 1.4: el máximo sale de la fecha (miMax, de nx_mi_fecha) y de las reglas congeladas de la temporada.
+export default function TablaProvisoria({ fechaId, menorEsMejor = true, miJugadorId, miMax, intentosMax, intentosUnderdog, underdogs }) {
+  const maxDe = (id) => (id === miJugadorId && miMax ? miMax : underdogs?.includes(id) ? intentosUnderdog : intentosMax)
   const [filas, setFilas] = useState(null)
   const [sinConexion, setSinConexion] = useState(false)
   const [cambiadas, setCambiadas] = useState(new Set())
@@ -90,7 +92,7 @@ export default function TablaProvisoria({ fechaId, menorEsMejor = true, miJugado
                 )}
                 <span className="w-16 text-right tabular-nums text-ink">{tiempo(f.mejor)}</span>
                 <span className="w-9 text-right text-caption tabular-nums text-faint">
-                  {f.intentos_usados}/{intentosMax}
+                  {f.intentos_usados}{maxDe(f.jugador_id) ? `/${maxDe(f.jugador_id)}` : ''}
                 </span>
               </li>
             )
