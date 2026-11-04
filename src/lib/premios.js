@@ -25,7 +25,14 @@ function puestosPorFecha(jugadas, apodos) {
   })
 }
 
-export function calcularPremios(ranking, fechas) {
+// Campeones de una temporada: los que guardó NEXPLAY al finalizar (título compartido = varios);
+// en las de Playus (campeones null), el primero del ranking, como siempre.
+export function campeonesDe(temporada, ranking) {
+  if (temporada?.campeones?.length) return temporada.campeones.map(String)
+  return ranking.slice(0, 1).map((j) => String(j.jugador_id))
+}
+
+export function calcularPremios(ranking, fechas, temporada) {
   const jugadas = fechas.filter(seJugo)
   if (jugadas.length === 0 || ranking.length === 0) return []
   const apodos = Object.fromEntries(ranking.map((j) => [j.jugador_id, j.apodo]))
@@ -70,7 +77,9 @@ export function calcularPremios(ranking, fechas) {
       nombre: 'Campeón',
       descripcion: 'Más gemas en la temporada',
       icono: 'corona',
-      ...elegir(ids.map((id) => ({ id, valor: gemas[id] }))),
+      ...(temporada?.campeones?.length
+        ? { ganadores: campeonesDe(temporada, ranking).map((id) => ({ id, valor: gemas[id] ?? 0 })), segundo: null }
+        : elegir(ids.map((id) => ({ id, valor: gemas[id] })))),
       dato: (c) => plural(c.valor, 'gema', 'gemas'),
     },
     {
@@ -180,7 +189,7 @@ export function armarMedallero(fechasTodas, temporadas, apodos, especiales) {
   for (const t of temporadas) {
     const fechasT = fechasTodas.filter((f) => String(f.temporada_id) === String(t.id))
     if (!temporadaTerminada(t, fechasT)) continue
-    calcularPremios(rankingDesdeFechas(fechasT, apodos), fechasT).forEach((p, orden) => {
+    calcularPremios(rankingDesdeFechas(fechasT, apodos), fechasT, t).forEach((p, orden) => {
       for (const g of p.ganadores) {
         const f = fila(String(g.jugador_id))
         ;(f.premios[p.id] ??= { premio: p, orden, temporadas: [] }).temporadas.push(t.nombre)

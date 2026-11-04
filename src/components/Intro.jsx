@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { getFechasTodas, getJugadores } from '../lib/queries.js'
-import { rankingDesdeFechas, temporadaTerminada } from '../lib/premios.js'
+import { campeonesDe, rankingDesdeFechas, temporadaTerminada } from '../lib/premios.js'
 
 const CLAVE = 'playus-intro-vista'
 const DURACION_APERTURA = 1200 // ms, igual que .telon en index.css
@@ -23,14 +23,16 @@ async function cargarCampeones(temporadas, temporadaId) {
   const lista = []
   for (const t of orden) {
     const fechasT = fechas.filter((f) => String(f.temporada_id) === String(t.id))
-    const [primero] = rankingDesdeFechas(fechasT, apodos)
+    const ranking = rankingDesdeFechas(fechasT, apodos)
+    const [primero] = ranking
     if (!primero || primero.gemas === 0) continue
     const terminada = temporadaTerminada(t, fechasT)
+    const ids = terminada ? campeonesDe(t, ranking) : [primero.jugador_id]
     lista.push({
       id: t.id,
-      etiqueta: terminada ? `Campeón · ${t.nombre}` : `Va ganando · ${t.nombre}`,
-      apodo: primero.apodo,
-      gemas: primero.gemas,
+      etiqueta: terminada ? `${ids.length > 1 ? 'Campeones' : 'Campeón'} · ${t.nombre}` : `Va ganando · ${t.nombre}`,
+      apodo: ids.map((id) => apodos[id] ?? '?').join(', '),
+      gemas: ranking.find((j) => j.jugador_id === ids[0])?.gemas ?? primero.gemas,
     })
   }
   return lista

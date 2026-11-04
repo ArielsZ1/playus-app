@@ -1,6 +1,6 @@
 // Contenido del museo (museo/index.html), con getTemporadas() + getFechasTodas() + getJugadores().
 import { participo, seJugo } from './fecha.js'
-import { rankingDesdeFechas, temporadaTerminada } from './premios.js'
+import { campeonesDe, rankingDesdeFechas, temporadaTerminada } from './premios.js'
 import { analizarJugador } from './perfil.js'
 import { numeroDe } from './records.js'
 
@@ -19,20 +19,26 @@ export function armarMuseo(temporadas, fechas, apodos) {
     actual: actual?.nombre,
   }
 
-  // Campeones de temporadas terminadas; las seguidas del mismo jugador se agrupan
+  // Campeones de temporadas terminadas (un título compartido cuenta para cada uno);
+  // las seguidas del mismo jugador se agrupan
   const campeones = []
+  let previos = []
   let enJuego = null
   for (const t of temporadas) {
     const fechasT = fechas.filter((f) => String(f.temporada_id) === String(t.id))
-    const [primero] = rankingDesdeFechas(fechasT, apodos)
-    if (!primero) continue
+    const ranking = rankingDesdeFechas(fechasT, apodos)
+    if (!ranking[0]) continue
     if (!temporadaTerminada(t, fechasT)) {
-      enJuego = { temporada: t.nombre, apodo: primero.apodo }
+      enJuego = { temporada: t.nombre, apodo: ranking[0].apodo }
       continue
     }
-    const ultimo = campeones[campeones.length - 1]
-    if (ultimo && ultimo.jugador_id === primero.jugador_id) ultimo.temporadas.push(t.nombre)
-    else campeones.push({ jugador_id: primero.jugador_id, apodo: primero.apodo, temporadas: [t.nombre] })
+    previos = campeonesDe(t, ranking).map((id) => {
+      const seguido = previos.find((c) => c.jugador_id === id)
+      if (seguido) return seguido.temporadas.push(t.nombre), seguido
+      const nuevo = { jugador_id: id, apodo: apodos[id] ?? '?', temporadas: [t.nombre] }
+      campeones.push(nuevo)
+      return nuevo
+    })
   }
 
   // La leyenda: más títulos; a igualdad, más victorias

@@ -39,7 +39,7 @@ export function analizarJugador(jugadorId, fechasTodas, temporadas, apodos) {
     const terminada = temporadaTerminada(t, fechasT)
     temporadasJugadas.push({ temporada: t, puesto: ranking.findIndex((j) => mismo(j.jugador_id, id)) + 1, de: ranking.length, terminada })
     if (!terminada) continue
-    for (const p of calcularPremios(ranking, fechasT)) {
+    for (const p of calcularPremios(ranking, fechasT, t)) {
       if (p.ganadores.some((g) => mismo(g.jugador_id, id))) palmares.push({ temporada: t, premio: p })
     }
   }

@@ -149,7 +149,7 @@ export default function Premios({ temporadaId, temporada }) {
       .then(([premiosData, ranking, fechas]) => {
         if (!activo) return
         setPremios(premiosData)
-        setAutomaticos(calcularPremios(ranking, fechas))
+        setAutomaticos(calcularPremios(ranking, fechas, temporada))
         setDefinitivo(temporadaTerminada(temporada, fechas))
       })
       .catch((err) => {
