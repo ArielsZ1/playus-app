@@ -491,3 +491,37 @@ export const getMiFecha = (fechaId) => rpc('nx_mi_fecha', { p_fecha_id: fechaId 
 export const getMiRevancha = () => rpc('nx_mi_revancha')
 export const terminarIntento = (intentoId, resultado, datos) =>
   rpc('nx_terminar_intento', { p_intento_id: intentoId, p_resultado: resultado, p_datos: datos })
+
+// ---------- NEXPLAY: herramientas del admin (etapa 3, contrato 6) ----------
+export const cancelarFecha = (fechaId, motivo) => rpc('nx_cancelar_fecha', { p_fecha_id: fechaId, p_motivo: motivo })
+// nuevo: en milisegundos
+export const corregirResultado = (intentoId, nuevo, motivo) =>
+  rpc('nx_corregir_resultado', { p_intento_id: intentoId, p_nuevo: nuevo, p_motivo: motivo })
+export const pausarTemporada = (id, motivo) => rpc('nx_pausar', { p_temporada_id: id, p_motivo: motivo })
+export const reanudarTemporada = (id) => rpc('nx_reanudar', { p_temporada_id: id })
+export const excluirJuego = (temporadaId, juegoId, excluir) =>
+  rpc('nx_excluir_juego', { p_temporada_id: temporadaId, p_juego_id: juegoId, p_excluir: excluir })
+// Filas con motivo, de la más nueva a la más vieja (solo el admin).
+export const getAuditoria = ({ limite = 50 } = {}) => rpc('nx_auditoria', { p_limite: limite })
+
+// Los juegos jugables (con módulo) y si están fuera de la ruleta de esta temporada.
+export async function getRuletaTemporada(temporadaId) {
+  const [juegos, excluidos] = await Promise.all([
+    nx.from('juegos').select('id, nombre').not('modulo', 'is', null).order('nombre'),
+    nx.from('temporada_juegos_excluidos').select('juego_id').eq('temporada_id', temporadaId),
+  ])
+  if (juegos.error) throw juegos.error
+  if (excluidos.error) throw excluidos.error
+  const fuera = new Set(excluidos.data.map((x) => x.juego_id))
+  return juegos.data.map((j) => ({ ...j, excluido: fuera.has(j.id) }))
+}
+
+// Todos los intentos de una fecha, por apodo y número (contrato 6.5).
+export async function getIntentosFecha(fechaId) {
+  const { data, error } = await nx
+    .from('intentos')
+    .select('id, numero, estado, resultado, motivo, es_revancha, jugador:jugadores(apodo)')
+    .eq('fecha_id', fechaId)
+  if (error) throw error
+  return data.sort((a, b) => a.jugador.apodo.localeCompare(b.jugador.apodo, 'es') || a.numero - b.numero)
+}
