@@ -12,8 +12,15 @@ language sql stable security definer set search_path = public as $$
   group by j.menor_es_mejor
 $$;
 
+-- La revancha es numero 1 y puede convivir con un intento 1 cortado: las revanchas salen del indice unico
+-- (dos revanchas no pueden pasar: nx_empezar_revancha bloquea la fecha y chequea).
+drop index public.intentos_fecha_jugador_numero;
+create unique index intentos_fecha_jugador_numero on public.intentos (fecha_id, jugador_id, numero)
+  where motivo is distinct from 'colchon' and not es_revancha;
+
 -- Quien tiene revancha en esa fecha. estado = 'cerrada' (no solo cerrada_en): las canceladas tambien lo tienen.
--- "No jugo" = ningun intento con numero 1..4 (cualquier estado o motivo, colchon incluido); la revancha es numero 1.
+-- "No jugo" (regla del usuario, 2026-11-04) = ningun intento 1..4, o un unico intento que se corto
+-- sin terminar (interrumpido por el cierre). Cualquier revancha previa tambien la bloquea.
 create function public.nx__puede_revancha(p_fecha_id uuid, p_jugador_id uuid) returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (
@@ -22,7 +29,10 @@ language sql stable security definer set search_path = public as $$
       and f.numero_fecha < t.cantidad_fechas and coalesce(t.reglas->>'ritmo', 'diario') <> 'maraton'
       and not coalesce(f.sin_jugadores, false)
       and not exists (select 1 from public.intentos i
-                      where i.fecha_id = f.id and i.jugador_id = p_jugador_id and i.numero between 1 and 4))
+                      where i.fecha_id = f.id and i.jugador_id = p_jugador_id and i.numero between 1 and 4
+                        and (i.es_revancha or i.estado <> 'interrumpido' or i.motivo is distinct from 'fecha_cerrada'))
+      and (select count(*) from public.intentos i
+           where i.fecha_id = f.id and i.jugador_id = p_jugador_id and i.numero between 1 and 4 and not i.es_revancha) <= 1)
 $$;
 
 revoke execute on function public.nx__a_superar(uuid), public.nx__puede_revancha(uuid, uuid)
@@ -78,6 +88,11 @@ begin
   if i.estado = 'interrumpido' and i.motivo = 'fecha_cerrada' then
     if now() > (select f.cerrada_en from public.fechas f where f.id = i.fecha_id) + interval '2 hours' then
       raise exception 'fuera_de_plazo';
+    end if;
+    -- quien ya empezo la revancha de esa fecha renuncio a subir el intento cortado
+    if exists (select 1 from public.intentos x where x.fecha_id = i.fecha_id and x.jugador_id = i.jugador_id
+               and x.es_revancha) then
+      raise exception 'intento_cerrado';
     end if;
     tarde := true;
   elsif i.estado <> 'en_curso' then

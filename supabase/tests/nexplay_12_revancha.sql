@@ -142,5 +142,33 @@ begin
   begin perform nx_terminar_intento(ie, 3000, format(ok, 3000)::jsonb); msg := null; exception when others then msg := sqlerrm; end;
   if msg is null or msg not like '%fuera_de_plazo%' then raise exception 'FALLA: 5e (%)', msg; end if;
 
+  -- 6 regla del usuario: un unico intento cortado por el cierre da revancha; dos intentos, o uno terminado, no
+  perform set_config('role','postgres',true);
+  update fechas set cerrada_en = now() where id = f1;
+  delete from intentos where fecha_id = f1 and jugador_id in (j[3], j[4], j[5]) and es_revancha;
+  delete from resultados where fecha_id = f1 and jugador_id = j[3];
+  insert into intentos(fecha_id, jugador_id, numero, estado, motivo, semilla) values
+    (f1, j[3], 1, 'interrumpido', 'fecha_cerrada', 1) returning id into ic;  -- C: un solo intento cortado
+  insert into intentos(fecha_id, jugador_id, numero, estado, motivo, semilla) values
+    (f1, j[4], 1, 'interrumpido', 'colchon', 1), (f1, j[4], 1, 'interrumpido', 'fecha_cerrada', 1);  -- D: dos
+  insert into intentos(fecha_id, jugador_id, numero, estado, resultado, motivo, semilla) values
+    (f1, j[5], 1, 'invalido', null, 'demasiado_rapido', 1);  -- E: uno terminado (invalido)
+  perform set_config('role','authenticated',true);
+  perform set_config('request.jwt.claims', json_build_object('sub',u[4],'role','authenticated')::text, true);
+  begin perform nx_empezar_revancha(f1); msg := null; exception when others then msg := sqlerrm; end;
+  if msg is null or msg not like '%sin_revancha%' then raise exception 'FALLA: 6a dos intentos (%)', msg; end if;
+  perform set_config('request.jwt.claims', json_build_object('sub',u[5],'role','authenticated')::text, true);
+  begin perform nx_empezar_revancha(f1); msg := null; exception when others then msg := sqlerrm; end;
+  if msg is null or msg not like '%sin_revancha%' then raise exception 'FALLA: 6b terminado (%)', msg; end if;
+  perform set_config('request.jwt.claims', json_build_object('sub',u[3],'role','authenticated')::text, true);
+  if (nx_mi_revancha()->>'fecha_id')::uuid is distinct from f1 then raise exception 'FALLA: 6c mi_revancha cortado'; end if;
+  select * into r from nx_empezar_revancha(f1);
+  if r.numero <> 1 then raise exception 'FALLA: 6d %', r; end if;
+  -- ya en revancha, el intento cortado no se sube tarde aunque este dentro de las 2 h
+  begin perform nx_terminar_intento(ic, 3000, format(ok, 3000)::jsonb); msg := null; exception when others then msg := sqlerrm; end;
+  if msg is null or msg not like '%intento_cerrado%' then raise exception 'FALLA: 6e (%)', msg; end if;
+  begin perform nx_empezar_revancha(f1); msg := null; exception when others then msg := sqlerrm; end;
+  if msg is null or msg not like '%sin_revancha%' then raise exception 'FALLA: 6f segunda (%)', msg; end if;
+
   raise exception 'TEST_OK';
 end $$;
