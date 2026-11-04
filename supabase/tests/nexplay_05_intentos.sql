@@ -40,7 +40,12 @@ begin
     raise exception 'FALLA: 3 %', i; end if;
 
   -- 4 abandono: empezar el 3 sin terminar el 2
+  -- etapa 3: el primer abandono en el 1 o 2 es el colchon (el numero queda libre); el siguiente ya cuenta
   select intento_id into i2 from nx_empezar_intento(f.id);
+  select * into e from nx_empezar_intento(f.id);
+  select * into i from intentos where id = i2;
+  if i.estado <> 'interrumpido' or i.motivo <> 'colchon' or e.numero <> 2 then raise exception 'FALLA: 4a colchon % %', i, e; end if;
+  i2 := e.intento_id;
   select * into e from nx_empezar_intento(f.id);
   i3 := e.intento_id;
   if e.numero <> 3 then raise exception 'FALLA: 4a numero %', e.numero; end if;
