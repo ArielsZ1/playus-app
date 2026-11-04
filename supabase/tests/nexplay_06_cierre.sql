@@ -34,7 +34,10 @@ begin
   begin perform nx_cerrar_fecha(f.id); msg := null; exception when others then msg := sqlerrm; end;
   if msg is null or msg not like '%solo_admin%' then raise exception 'FALLA: 0 (%)', msg; end if;
   perform set_config('request.jwt.claims', json_build_object('sub',adm,'role','authenticated')::text, true);
-  f := nx_cerrar_fecha(f.id);
+  -- etapa 3: el admin ya no cierra temporadas reales (solo_prueba); se cierra con el interno, como el tick
+  perform set_config('role','postgres',true);
+  f := nx__cerrar_fecha(f.id);
+  perform set_config('role','authenticated',true);
   if f.estado <> 'cerrada' or f.cerrada_en is null or f.sin_jugadores then raise exception 'FALLA: 1a %', f; end if;
   select * into r from resultados where fecha_id = f.id and jugador_id = ja;
   if r.rivales_superados <> 2 or r.gemas <> 30 or r.performance <> '4.00 Segundos' or not r.jugo or r.sancionado then
@@ -69,8 +72,8 @@ begin
   insert into intentos(fecha_id, jugador_id, numero, estado, resultado, semilla) values
     (f.id, ja, 1, 'completado', 4500, 1), (f.id, ja, 2, 'completado', 4000, 1),
     (f.id, jb, 1, 'completado', 4000, 1), (f.id, jc, 1, 'completado', 5000, 1);
+  f := nx__cerrar_fecha(f.id);
   perform set_config('role','authenticated',true);
-  f := nx_cerrar_fecha(f.id);
   select * into r from resultados where fecha_id = f.id and jugador_id = ja;
   if r.rivales_superados <> 1 or r.gemas <> 21 then raise exception 'FALLA: 2b A %', r; end if;
   select * into r from resultados where fecha_id = f.id and jugador_id = jb;
