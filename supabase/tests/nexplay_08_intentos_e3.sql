@@ -2,12 +2,12 @@
 -- Un solo bloque DO que termina con raise exception 'TEST_OK': nada queda en la base.
 do $$
 declare
-  adm uuid; u uuid[] := array[gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid()];
+  adm uuid; u uuid[] := array[gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid()];
   j uuid[] := '{}'; jx uuid; k int; t temporadas; f fechas; e record; i intentos; m jsonb; msg text; n int; id1 uuid;
 begin
   select user_id into adm from cuentas where es_admin limit 1;
   insert into auth.users(id, email) select x, x::text || '@x.com' from unnest(u) x;
-  for k in 1..7 loop
+  for k in 1..8 loop
     insert into jugadores(apodo) values ('Test ' || k) returning id into jx;
     j := j || jx;
     insert into cuentas(user_id, estado, jugador_id) values (u[k], 'aceptado', jx);
@@ -105,6 +105,16 @@ begin
     (f.id, j[7], 0, 'completado', 3000, 1), (f.id, j[7], 1, 'completado', 5000, 1);
   select * into e from nx_tabla_provisoria where fecha_id = f.id and jugador_id = j[7];
   if e.mejor <> 5000 or e.intentos_usados <> 1 then raise exception 'FALLA: 8a %', e; end if;
+
+  -- 10 practica con el 1 en curso (jugador 8): el 1 queda abandonado (no colchon) y la practica se concede
+  perform set_config('role','authenticated',true);
+  perform set_config('request.jwt.claims', json_build_object('sub',u[8],'role','authenticated')::text, true);
+  select intento_id into id1 from nx_empezar_intento(f.id);
+  select * into e from nx_empezar_intento(f.id, true);
+  select * into i from intentos where id = id1;
+  if e.numero <> 0 or i.estado <> 'interrumpido' or i.motivo <> 'abandonado' then raise exception 'FALLA: 10a % %', i, e; end if;
+  m := nx_mi_fecha(f.id);
+  if (m->>'colchon_usado')::boolean or m->>'practica' <> 'usada' or (m->>'usados')::int <> 1 then raise exception 'FALLA: 10b %', m; end if;
 
   -- 9 el cierre tampoco cuenta la practica: el 7 queda con 5.00, no con 3.00
   perform set_config('role','authenticated',true);

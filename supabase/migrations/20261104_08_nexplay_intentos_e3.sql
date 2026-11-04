@@ -39,7 +39,8 @@ begin
 
   -- Un intento sin terminar: en el 1 o 2 y con la practica sin usar, es el colchon (el numero queda libre).
   update public.intentos i set estado = 'interrumpido', terminado_en = now(),
-    motivo = case when i.numero in (1,2) and not usada then 'colchon' else 'abandonado' end
+    -- con p_practica el colchon y la practica son el mismo recurso: el intento viejo cuenta como abandonado
+    motivo = case when i.numero in (1,2) and not usada and not p_practica then 'colchon' else 'abandonado' end
   where i.fecha_id = f.id and i.jugador_id = c.jugador_id and i.estado = 'en_curso' and not i.es_revancha;
 
   if p_practica then
