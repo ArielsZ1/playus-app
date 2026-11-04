@@ -22,7 +22,7 @@ create function public.nx_empezar_intento(p_fecha_id uuid, p_practica boolean de
 returns table(intento_id uuid, numero int, semilla int, modulo text)
 language plpgsql security definer set search_path = public as $$
 #variable_conflict use_column
-declare c public.cuentas; f public.fechas; maxi int; n int; r public.intentos; usada boolean;
+declare c public.cuentas; f public.fechas; maxi int; n int; r public.intentos; usada boolean; reg jsonb;
 begin
   select * into c from public.cuentas where user_id = auth.uid();
   if not found or c.estado <> 'aceptado' or c.jugador_id is null then raise exception 'no_habilitado'; end if;
@@ -46,7 +46,9 @@ begin
   if p_practica then
     n := 0;
   else
-    maxi := case when c.jugador_id = any(coalesce(f.underdogs, '{}')) then 4 else 3 end;
+    select t.reglas into reg from public.temporadas t where t.id = f.temporada_id;
+    maxi := case when c.jugador_id = any(coalesce(f.underdogs, '{}'))
+      then coalesce((reg->>'intentos_underdog')::int, 4) else coalesce((reg->>'intentos')::int, 3) end;
     select count(*) into n from public.intentos i
     where i.fecha_id = f.id and i.jugador_id = c.jugador_id
       and i.numero between 1 and 4 and not i.es_revancha and i.motivo is distinct from 'colchon';
@@ -61,11 +63,13 @@ end $$;
 
 create function public.nx_mi_fecha(p_fecha_id uuid) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
-declare jid uuid; f public.fechas; und boolean; usados int; col boolean; pra boolean; cerr boolean;
+declare jid uuid; f public.fechas; und boolean; usados int; col boolean; pra boolean; cerr boolean; reg jsonb;
 begin
   select jugador_id into jid from public.cuentas where user_id = auth.uid() and estado = 'aceptado';
+  if jid is null then raise exception 'no_habilitado'; end if;
   select * into f from public.fechas where id = p_fecha_id;
-  if jid is null or not found then raise exception 'no_habilitado'; end if;
+  if not found then raise exception 'fecha_no_abierta'; end if;
+  select t.reglas into reg from public.temporadas t where t.id = f.temporada_id;
   und := jid = any(coalesce(f.underdogs, '{}'));
   select count(*) filter (where numero between 1 and 4 and not es_revancha and motivo is distinct from 'colchon'),
          coalesce(bool_or(motivo = 'colchon'), false),
@@ -73,7 +77,8 @@ begin
          coalesce(bool_or(numero >= 2), false)
   into usados, col, pra, cerr
   from public.intentos where fecha_id = f.id and jugador_id = jid;
-  return jsonb_build_object('intentos_max', case when und then 4 else 3 end, 'usados', usados, 'underdog', und,
+  return jsonb_build_object('intentos_max', case when und then coalesce((reg->>'intentos_underdog')::int, 4)
+      else coalesce((reg->>'intentos')::int, 3) end, 'usados', usados, 'underdog', und,
     'practica', case when pra then 'usada' when cerr then 'cerrada' else 'disponible' end,
     'colchon_usado', col);
 end $$;

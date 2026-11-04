@@ -2,12 +2,12 @@
 -- Un solo bloque DO que termina con raise exception 'TEST_OK': nada queda en la base.
 do $$
 declare
-  adm uuid; u uuid[] := array[gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid()];
+  adm uuid; u uuid[] := array[gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid()];
   j uuid[] := '{}'; jx uuid; k int; t temporadas; f fechas; e record; i intentos; m jsonb; msg text; n int; id1 uuid;
 begin
   select user_id into adm from cuentas where es_admin limit 1;
   insert into auth.users(id, email) select x, x::text || '@x.com' from unnest(u) x;
-  for k in 1..8 loop
+  for k in 1..9 loop
     insert into jugadores(apodo) values ('Test ' || k) returning id into jx;
     j := j || jx;
     insert into cuentas(user_id, estado, jugador_id) values (u[k], 'aceptado', jx);
@@ -115,6 +115,21 @@ begin
   if e.numero <> 0 or i.estado <> 'interrumpido' or i.motivo <> 'abandonado' then raise exception 'FALLA: 10a % %', i, e; end if;
   m := nx_mi_fecha(f.id);
   if (m->>'colchon_usado')::boolean or m->>'practica' <> 'usada' or (m->>'usados')::int <> 1 then raise exception 'FALLA: 10b %', m; end if;
+
+  -- 11 reglas no por defecto: intentos = 2 corta en el tercero; intentos_underdog = 5 sube el tope del underdog
+  perform set_config('role','postgres',true);
+  update temporadas set reglas = jsonb_set(jsonb_set(reglas, '{intentos}', '2'), '{intentos_underdog}', '5') where id = t.id;
+  insert into intentos(fecha_id, jugador_id, numero, estado, resultado, semilla) values
+    (f.id, j[9], 1, 'completado', 5000, 1), (f.id, j[9], 2, 'completado', 5000, 1);
+  perform set_config('role','authenticated',true);
+  perform set_config('request.jwt.claims', json_build_object('sub',u[9],'role','authenticated')::text, true);
+  begin perform nx_empezar_intento(f.id); msg := null; exception when others then msg := sqlerrm; end;
+  if msg is null or msg not like '%sin_intentos%' then raise exception 'FALLA: 11a (%)', msg; end if;
+  m := nx_mi_fecha(f.id);
+  if (m->>'intentos_max')::int <> 2 then raise exception 'FALLA: 11b %', m; end if;
+  perform set_config('request.jwt.claims', json_build_object('sub',u[6],'role','authenticated')::text, true);
+  m := nx_mi_fecha(f.id);
+  if (m->>'intentos_max')::int <> 5 then raise exception 'FALLA: 11c %', m; end if;
 
   -- 9 el cierre tampoco cuenta la practica: el 7 queda con 5.00, no con 3.00
   perform set_config('role','authenticated',true);
