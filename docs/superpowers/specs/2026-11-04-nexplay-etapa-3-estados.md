@@ -252,15 +252,15 @@ Cada fecha (la abierta y cada cerrada de la lista) tiene un `<details>` "Intento
 
 ### 6.6 Auditoría
 
-Último `gem-panel` de la pantalla, `stat-label` `AUDITORÍA`. Es un `<details>` cerrado: se pide recién al abrirlo (`getAuditoria({ limite: 50 })`). **[mi decisión]** El servidor **no deja leer `motivo`** (migración `20261102_03`), así que no se muestra (ver la pregunta abierta).
+Último `gem-panel` de la pantalla, `stat-label` `AUDITORÍA`. Es un `<details>` cerrado: se pide recién al abrirlo (`getAuditoria({ limite: 50 })`, que llama al RPC `nx_auditoria`). **[mi decisión]** La tabla sigue sin dejar leer `motivo` (migración `20261102_03`); el RPC `nx_auditoria(p_limite)` (migración 13, aprobada por el usuario el 2026-11-04) lo devuelve solo al admin.
 
 | Estado | Qué se ve |
 |---|---|
 | Cargando | "Cargando la auditoría…" |
 | Error | Error de red con "Reintentar" dentro del panel. |
 | Vacía | "Todavía no hay acciones registradas." |
-| Filas | Una por acción, de la más nueva a la más vieja. Arriba, `--caption` `--text3`: "{dd/mm hh:mm} · {Admin / Automático}" (Automático si `admin_user_id` es null o la acción empieza con `auto_`). Abajo, la acción en `--body` según la tabla de abajo. Al final, `<details>` "Ver antes y después" con `antes` y `despues` en IBM Plex Mono 12px, con saltos de línea y cortes en cualquier carácter. |
-| Pie | `--caption`: "Se muestran las últimas 50 acciones. El motivo queda guardado, pero no se ve acá." |
+| Filas | Una por acción, de la más nueva a la más vieja. Arriba, `--caption` `--text3`: "{dd/mm hh:mm} · {Admin / Automático}" (Automático si `admin_user_id` es null o la acción empieza con `auto_`). Abajo, la acción en `--body` según la tabla de abajo y, si tiene motivo, debajo en `--body` `--text2`: "Motivo: {motivo}". Al final, `<details>` "Ver antes y después" con `antes` y `despues` en IBM Plex Mono 12px, con saltos de línea y cortes en cualquier carácter. |
+| Pie | `--caption`: "Se muestran las últimas 50 acciones." |
 
 | `accion` | Texto |
 |---|---|
@@ -374,7 +374,9 @@ Se nombran para no inventarlos ahora:
 
 ---
 
-## 11. Pregunta abierta para el usuario
+## 11. Pregunta abierta para el usuario (resuelta)
+
+**Resuelta el 2026-11-04: sí.** El usuario aprobó el RPC `nx_auditoria(p_limite)` (migración 13). La sección 6.6 ya muestra el motivo. Queda abajo la pregunta original como registro.
 
 **¿Agregamos una función solo para el admin que le deje ver los motivos en la auditoría?** Hoy `auditoria.motivo` no se puede leer desde la app (lo cerramos en la etapa 1 porque el motivo de un bloqueo es texto libre del admin). La vista de la sección 6.6 muestra qué se hizo, cuándo, y el antes y el después, pero no el porqué. Sin el motivo, la auditoría sirve de menos para cancelar, corregir y pausar, que justamente piden motivo.
 

@@ -349,7 +349,7 @@ Cubre las pantallas de spec §4, con los estados de cada una (cargando, error de
     - `corregirResultado(intentoId, nuevo, motivo)`;
     - `pausarTemporada(id, motivo)`;
     - `reanudarTemporada(id)`;
-    - `getAuditoria({ limite = 50 })` (select de `auditoria` ordenado por `created_at desc`; `motivo` no es legible por la API según la migración 03, así que se muestra lo que la vista pública permita, y lo verifica el implementador con `list_tables`).
+    - `getAuditoria({ limite = 50 })` llama al RPC `nx_auditoria(p_limite)` (migración 13, aplicada 2026-11-04), que devuelve las filas con `motivo` solo al admin.
   - `AdminTorneo.jsx`, según el contrato:
     - los botones de iniciar y cerrar fecha solo si `temporada.es_prueba` o ritmo `maraton`;
     - al crear la temporada, un selector de ritmo: Diario (22:00) / Maratón (a mano);
